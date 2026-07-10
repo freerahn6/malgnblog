@@ -15,3 +15,6 @@ dist/
 # temp
 *.tmp
 _scratch/
+
+# 빌드 생성물(build.py로 재생성)
+_deploy/public/
