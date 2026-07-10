@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re, os, markdown, html as H
+import re, os, json, markdown, html as H
 ART="C:/job/blog/articles"; PREV="C:/job/blog/_preview"; OUT="C:/job/blog/_deploy/public"
 
 art_html=open(f"{PREV}/article.html",encoding='utf-8').read()
@@ -13,6 +13,7 @@ FAB=FAB.replace('/cloud/inquiry.jsp"','/cloud/inquiry.jsp#stickyMenu"')
 INQ="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu"
 SCRIPT=re.findall(r'<script>.*?</script>',art_html,re.S)[-1]
 COVERS=re.findall(r'class="cover-img"[^>]*src="(data:image/jpeg;base64,[^"]+)"',idx_html)
+IMG=json.load(open('img_map.json',encoding='utf-8'))
 BANL=open('wecandeo_datauri.txt',encoding='utf-8').read().strip()
 BANR=open('malgnsoft_datauri.txt',encoding='utf-8').read().strip()
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
@@ -106,7 +107,7 @@ for a in arts:
         cls=' class="on"' if k==0 else ''
         _ti.append(f'<li><a href="#{sid}"{cls}>{H.escape(txt)}</a></li>')
     toc_html=''.join(_ti)
-    hero=COVERS[COVER.get(a['slug'],1)]
+    hero=IMG.get(a['slug'],COVERS[1])
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT)
@@ -143,7 +144,7 @@ def excerpt(s,n=88):
 feat=bysl['lms-selection-guide-for-corporate-training']
 def card_cover(a,extra=''):
     return (f'<a class="cover" href="/{a["category"]}/{a["slug"]}/"><img class="cover-img" loading="lazy" '
-            f'src="{COVERS[COVER[a["slug"]]]}" alt="{H.escape(a["title"])}"><span class="scrim"></span>'
+            f'src="{IMG.get(a["slug"],COVERS[1])}" alt="{H.escape(a["title"])}"><span class="scrim"></span>'
             f'<span class="cat">{CATL[a["category"]]}</span>{extra}</a>')
 featured_html=('<article class="featured">'+card_cover(feat,'<span class="ctitle">FEATURED · 추천</span>')+
     f'<div class="body"><span class="flag">이번 주 추천</span><h2>{H.escape(feat["title"])}</h2>'
