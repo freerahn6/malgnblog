@@ -1,0 +1,17 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# build / deps (미래 Astro 빌드용)
+node_modules/
+dist/
+.astro/
+.cache/
+
+# temp
+*.tmp
+_scratch/

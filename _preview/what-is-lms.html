@@ -1,0 +1,360 @@
+<title>교육운영 노트 — LMS란 무엇인가 (미리보기)</title>
+<style>
+  :root{
+    --bg:#FBFBFD; --surface:#FFFFFF; --surface-2:#F4F6FA;
+    --text:#1A2230; --muted:#5A6577; --faint:#8A93A6;
+    --border:#E3E7EF; --border-strong:#D2D8E4;
+    --accent:#1D4ED8; --accent-ink:#16337A; --chip-bg:#EAF0FE;
+    --figure-bg:#FFFFFF; --figure-border:#E3E7EF;
+    --serp-title:#1a0dab; --serp-url:#4b5563; --serp-desc:#4d5562;
+    --good:#0f7b4f; --good-bg:#e6f4ec;
+    --radius:14px;
+    --measure:42rem;
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0E131E; --surface:#151C2A; --surface-2:#1B2333;
+      --text:#E7EBF3; --muted:#9AA6BC; --faint:#6E7A92;
+      --border:#263149; --border-strong:#33415C;
+      --accent:#6B9BFF; --accent-ink:#A9C4FF; --chip-bg:#1A2540;
+      --figure-bg:#F3F6FC; --figure-border:#33415C;
+      --serp-title:#8ab4f8; --serp-url:#9aa6bc; --serp-desc:#c3ccdb;
+      --good:#4ecb8b; --good-bg:#12321f;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FBFBFD; --surface:#FFFFFF; --surface-2:#F4F6FA;
+    --text:#1A2230; --muted:#5A6577; --faint:#8A93A6;
+    --border:#E3E7EF; --border-strong:#D2D8E4;
+    --accent:#1D4ED8; --accent-ink:#16337A; --chip-bg:#EAF0FE;
+    --figure-bg:#FFFFFF; --figure-border:#E3E7EF;
+    --serp-title:#1a0dab; --serp-url:#4b5563; --serp-desc:#4d5562;
+    --good:#0f7b4f; --good-bg:#e6f4ec;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E131E; --surface:#151C2A; --surface-2:#1B2333;
+    --text:#E7EBF3; --muted:#9AA6BC; --faint:#6E7A92;
+    --border:#263149; --border-strong:#33415C;
+    --accent:#6B9BFF; --accent-ink:#A9C4FF; --chip-bg:#1A2540;
+    --figure-bg:#F3F6FC; --figure-border:#33415C;
+    --serp-title:#8ab4f8; --serp-url:#9aa6bc; --serp-desc:#c3ccdb;
+    --good:#4ecb8b; --good-bg:#12321f;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+    line-height:1.7;font-size:17px;letter-spacing:-0.003em;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:var(--measure);margin:0 auto;padding:0 20px}
+
+  /* preview banner */
+  .banner{background:var(--accent);color:#fff;font-size:12.5px;letter-spacing:.02em;
+    text-align:center;padding:7px 16px;font-weight:600}
+  .banner b{font-weight:700}
+  @media (prefers-color-scheme:dark){.banner{color:#0b1220}}
+  :root[data-theme="dark"] .banner{color:#0b1220}
+  :root[data-theme="light"] .banner{color:#fff}
+
+  /* site header */
+  header.site{border-bottom:1px solid var(--border);background:var(--surface)}
+  header.site .wrap{display:flex;align-items:baseline;gap:12px;padding-top:18px;padding-bottom:18px}
+  .wordmark{font-weight:800;font-size:20px;letter-spacing:-0.02em;color:var(--text)}
+  .wordmark .by{font-weight:500;font-size:13px;color:var(--muted);margin-left:2px}
+  .nav{margin-left:auto;display:flex;gap:16px;font-size:13.5px;color:var(--muted)}
+  .nav span{white-space:nowrap}
+
+  main{padding:34px 0 10px}
+
+  /* SERP preview */
+  .serp-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 10px}
+  .serp{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin-bottom:34px}
+  .serp .fav{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+  .serp .fav .dot{width:26px;height:26px;border-radius:50%;background:var(--chip-bg);
+    display:flex;align-items:center;justify-content:center;font-size:14px}
+  .serp .fav .site{font-size:12.5px;line-height:1.25}
+  .serp .fav .site b{display:block;color:var(--text);font-weight:600}
+  .serp .fav .site span{color:var(--serp-url)}
+  .serp h3{margin:2px 0 3px;font-size:20px;line-height:1.3;font-weight:500;color:var(--serp-title)}
+  .serp p{margin:0;font-size:14px;color:var(--serp-desc);line-height:1.58}
+  .serp .date{color:var(--faint)}
+
+  /* article head */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .chip{font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;
+    background:var(--chip-bg);color:var(--accent-ink);letter-spacing:.01em}
+  .chip.ghost{background:transparent;border:1px solid var(--border-strong);color:var(--muted)}
+  h1.title{font-size:34px;line-height:1.25;letter-spacing:-0.025em;font-weight:800;
+    margin:0 0 14px;text-wrap:balance}
+  .dek{font-size:18px;color:var(--muted);margin:0 0 20px;line-height:1.6}
+  .byline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+    padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    font-size:13.5px;color:var(--muted);margin-bottom:8px}
+  .byline .who{font-weight:600;color:var(--text)}
+  .byline .sep{width:3px;height:3px;border-radius:50%;background:var(--faint)}
+  .byline .num{font-variant-numeric:tabular-nums}
+
+  /* body */
+  article{padding-top:22px}
+  article h2{font-size:24px;line-height:1.3;letter-spacing:-0.02em;font-weight:750;
+    margin:42px 0 14px;padding-top:6px;text-wrap:balance}
+  article h3{font-size:18.5px;font-weight:700;margin:28px 0 10px;color:var(--text)}
+  article p{margin:0 0 18px}
+  article strong{font-weight:700;color:var(--text)}
+  article a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+  article a:hover{border-bottom-color:var(--accent)}
+  article ul{margin:0 0 18px;padding-left:2px;list-style:none;display:flex;flex-direction:column;gap:11px}
+  article ul li{position:relative;padding-left:20px}
+  article ul li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;
+    border-radius:2px;background:var(--accent);transform:rotate(45deg)}
+
+  /* figures */
+  figure{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+  .figbox{background:var(--figure-bg);border:1px solid var(--figure-border);border-radius:var(--radius);
+    padding:20px;overflow-x:auto}
+  .figbox svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  figcaption{font-size:13.5px;color:var(--muted);line-height:1.55;padding-left:2px}
+  .ph{background:var(--surface-2);border:1.5px dashed var(--border-strong);border-radius:var(--radius);
+    padding:34px 22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.6}
+  .ph .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--faint);border:1px solid var(--border-strong);border-radius:6px;padding:3px 8px;margin-bottom:10px}
+  .ph .alt{color:var(--faint);font-size:12.5px;margin-top:8px;font-style:italic}
+
+  /* tables */
+  .twrap{overflow-x:auto;margin:24px 0;border:1px solid var(--border);border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+  caption{caption-side:top;text-align:left;font-size:13px;font-weight:700;color:var(--muted);
+    padding:14px 16px 0;letter-spacing:.01em}
+  thead th{background:var(--surface-2);text-align:left;font-weight:700;font-size:13.5px;
+    color:var(--text);padding:12px 16px;border-bottom:2px solid var(--border-strong)}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody td strong{color:var(--text)}
+
+  /* CTA blockquote */
+  .cta{background:linear-gradient(180deg,var(--surface-2),var(--surface));
+    border:1px solid var(--border);border-left:4px solid var(--accent);
+    border-radius:12px;padding:18px 20px;margin:30px 0;font-size:16px;color:var(--text)}
+
+  /* FAQ */
+  .faq{margin:44px 0 10px;border-top:2px solid var(--border-strong);padding-top:8px}
+  .faq h2{margin-top:24px}
+  details{border-bottom:1px solid var(--border);padding:4px 0}
+  summary{cursor:pointer;list-style:none;padding:15px 30px 15px 4px;position:relative;
+    font-weight:650;font-size:16.5px;color:var(--text)}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:22px;font-weight:400;color:var(--accent);transition:transform .2s}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 4px 16px;color:var(--muted);font-size:15.5px;line-height:1.7}
+
+  /* principles footer */
+  .principles{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 22px;margin:38px 0}
+  .principles .h{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 14px}
+  .pgrid{display:flex;flex-wrap:wrap;gap:9px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+    background:var(--good-bg);color:var(--good);padding:6px 12px;border-radius:999px}
+  .pill svg{width:13px;height:13px;flex:none}
+
+  footer.site{border-top:1px solid var(--border);color:var(--faint);font-size:12.5px;
+    padding:22px 0 40px;text-align:center}
+
+  @media (max-width:560px){
+    body{font-size:16px}
+    h1.title{font-size:27px}
+    article h2{font-size:21px}
+    .nav{display:none}
+  }
+</style>
+
+<div class="banner">미리보기 &nbsp;·&nbsp; <b>blog.malgnsoft.com</b> &nbsp;·&nbsp; 도메인 연결 전 정적 렌더 — 캘린더 4번 글</div>
+
+<header class="site">
+  <div class="wrap">
+    <span class="wordmark">교육운영 노트<span class="by">by 맑은소프트</span></span>
+    <nav class="nav" aria-hidden="true">
+      <span>LMS·이러닝</span><span>기업교육·HRD</span><span>자격검정</span><span>에듀테크</span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Google SERP preview -->
+  <section aria-label="구글 검색 노출 미리보기">
+    <p class="serp-label">구글 검색 노출 미리보기</p>
+    <div class="serp">
+      <div class="fav">
+        <span class="dot">🎓</span>
+        <span class="site"><b>교육운영 노트</b><span>https://blog.malgnsoft.com › lms › what-is-lms</span></span>
+      </div>
+      <h3>LMS란 무엇인가? 이러닝 담당자가 알아야 할 기본기 총정리</h3>
+      <p><span class="date">2026. 7. 24. — </span>LMS(학습관리시스템)의 정의부터 교육 운영·평가/이수·데이터 통계라는 3대 영역, 핵심 기능 지도, LXP와의 차이, 담당자의 선택 기준까지 이러닝 기본기를 한 번에 정리합니다.</p>
+    </div>
+  </section>
+
+  <article>
+    <div class="chips">
+      <span class="chip">LMS·이러닝 구축/운영</span>
+      <span class="chip ghost">정보 · TOFU</span>
+      <span class="chip ghost">클러스터 A</span>
+    </div>
+    <h1 class="title">LMS란 무엇인가? 이러닝 담당자가 알아야 할 기본기 총정리</h1>
+    <p class="dek">LMS, 이러닝, LXP, SCORM이 뒤섞여 나오는데 정작 “LMS가 뭘 하는 물건인가”를 한 문장으로 답해주는 자료는 드뭅니다. 그 기본기를 처음부터 정리하는 기준글입니다.</p>
+    <div class="byline">
+      <span class="who">교육운영 노트 by 맑은소프트</span>
+      <span class="sep"></span><span class="num">2026-07-24</span>
+      <span class="sep"></span><span>읽는 시간 약 5분</span>
+      <span class="sep"></span><span>타깃 키워드 · “LMS란”</span>
+    </div>
+
+    <div class="article-body">
+      <p>교육 담당자가 처음 LMS 도입을 검토할 때 가장 먼저 부딪히는 벽은 용어입니다. LMS, 이러닝, LXP, SCORM이 뒤섞여 나오는데 정작 “그래서 LMS가 뭘 하는 물건인가”를 한 문장으로 답해주는 자료는 드뭅니다. 이 글은 그 기본기를 처음부터 정리하는 기준글입니다.</p>
+
+      <h2>LMS란 무엇인가 (한 문장 정의)</h2>
+      <p><strong>LMS(학습관리시스템, Learning Management System)란 온라인 교육의 과정 개설부터 수강 배정, 학습 진행, 시험·평가, 수료증 발급, 이력 통계까지 교육 운영의 전 과정을 하나의 시스템에서 관리하는 소프트웨어 플랫폼입니다.</strong> 강의 영상을 올려두는 저장소가 아니라, 그 영상을 누구에게 배정하고 얼마나 들었으며 이수 기준을 충족했는지를 자동으로 기록하고 판정하는 운영 체계라는 점이 핵심입니다.</p>
+      <p>이 정의만 잡아도 흔한 오해 하나가 풀립니다. 유튜브 비공개 채널이나 사내 공유 폴더에 강의 영상을 올려두는 것은 ‘콘텐츠 배포’이지 ‘학습 관리’가 아닙니다. 누가 끝까지 봤는지, 시험을 통과했는지, 수료증을 받을 자격이 되는지를 시스템이 판단해주지 않기 때문입니다. LMS는 바로 그 판단과 기록을 담당합니다.</p>
+
+      <h2>왜 LMS가 필요한가 — 수작업이 무너지는 지점</h2>
+      <p>교육 인원이 수십 명일 때는 엑셀과 메일로도 굴러갑니다. 문제는 규모가 커지는 순간입니다. 대상자가 수백 명이 되면 출석 확인, 진도 독려, 과제 취합, 채점, 수료증 발급, 결과 보고가 동시에 밀려들고, 담당자 한 명의 손으로는 정확도를 유지하기 어려워집니다. 특히 법정 의무교육처럼 이수 증빙을 감사에 제출해야 하는 교육은 기록 하나가 어긋나면 조직 전체의 리스크가 됩니다.</p>
+      <p>LMS가 해결하는 것은 ‘더 화려한 강의’가 아니라 이 <strong>운영의 정확도와 반복 업무의 자동화</strong>입니다. VOD 시청 기록으로 출석을 자동 반영하고, 이수 기준을 충족한 사람에게만 수료증을 발급하며, 미이수자에게 자동으로 독려 메일을 보내는 식으로 담당자가 놓치기 쉬운 지점을 시스템이 메웁니다.</p>
+
+      <h2>LMS의 3대 영역 — 운영에서 평가, 데이터로</h2>
+      <p>LMS의 기능은 수십 개에 이르지만, 담당자 입장에서는 세 개의 큰 영역으로 묶어 이해하는 편이 훨씬 빠릅니다. 교육이 흘러가는 순서 그대로 <strong>교육 운영 → 평가·이수 → 데이터·통계</strong>입니다. 앞 단계의 결과가 뒷 단계의 입력이 되는 하나의 흐름이라는 점이 중요합니다.</p>
+
+      <figure>
+        <div class="figbox">
+          <svg role="img" aria-labelledby="lms3-title lms3-desc" viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" width="760" height="300" style="font-family:sans-serif">
+            <title id="lms3-title">LMS 3대 영역의 흐름도</title>
+            <desc id="lms3-desc">교육 운영에서 평가·이수를 거쳐 데이터·통계로 이어지는 LMS의 세 영역이 화살표로 연결되고, 통계 결과가 다시 운영 개선으로 순환하는 구조를 나타낸 다이어그램.</desc>
+            <rect x="20" y="70" width="210" height="120" rx="10" fill="#e8f0fe" stroke="#1a56db" stroke-width="2"/>
+            <text x="125" y="105" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a7a">1. 교육 운영</text>
+            <text x="125" y="135" text-anchor="middle" font-size="13" fill="#333">과정 개설·수강 배정</text>
+            <text x="125" y="158" text-anchor="middle" font-size="13" fill="#333">콘텐츠·학습 독려</text>
+            <rect x="275" y="70" width="210" height="120" rx="10" fill="#e8f0fe" stroke="#1a56db" stroke-width="2"/>
+            <text x="380" y="105" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a7a">2. 평가 · 이수</text>
+            <text x="380" y="135" text-anchor="middle" font-size="13" fill="#333">출결·시험·과제</text>
+            <text x="380" y="158" text-anchor="middle" font-size="13" fill="#333">수료 판정·수료증</text>
+            <rect x="530" y="70" width="210" height="120" rx="10" fill="#e8f0fe" stroke="#1a56db" stroke-width="2"/>
+            <text x="635" y="105" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a3a7a">3. 데이터 · 통계</text>
+            <text x="635" y="135" text-anchor="middle" font-size="13" fill="#333">수료·수강 현황</text>
+            <text x="635" y="158" text-anchor="middle" font-size="13" fill="#333">이력·보고서</text>
+            <path d="M230 130 L275 130" stroke="#1a56db" stroke-width="2.5" marker-end="url(#arrow)"/>
+            <path d="M485 130 L530 130" stroke="#1a56db" stroke-width="2.5" marker-end="url(#arrow)"/>
+            <path d="M635 190 C635 250, 125 250, 125 190" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrow2)"/>
+            <text x="380" y="272" text-anchor="middle" font-size="12" fill="#666">통계 결과가 다음 교육의 운영 개선으로 순환</text>
+            <text x="380" y="34" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a3a7a">LMS 3대 영역: 운영 → 평가 → 데이터</text>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 Z" fill="#1a56db"/></marker>
+              <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L8 3 L0 6 Z" fill="#7a7a7a"/></marker>
+            </defs>
+          </svg>
+        </div>
+        <figcaption>LMS의 세 영역은 단절된 기능 묶음이 아니라, 운영 결과가 평가로, 평가 기록이 데이터로 이어지는 하나의 순환 흐름입니다. <em>(인라인 SVG — 구글이 텍스트로 읽는 SEO 친화 그래픽)</em></figcaption>
+      </figure>
+
+      <h3>1) 교육 운영 — 무엇을, 누구에게, 어떻게 배정하나</h3>
+      <p>교육의 출발점입니다. 정규 과정을 개설하고, 대상자를 수강 배정하며, 학습 콘텐츠를 제공하고, 진도가 늦은 학습자에게 독려 메일을 보내는 일이 여기 속합니다. 짧게 쪼갠 마이크로러닝, 여러 과정을 묶은 연수 프로그램, 도서·콘텐츠 판매 같은 다양한 운영 형태도 이 영역에서 다룹니다.</p>
+      <h3>2) 평가·이수 — 얼마나 배웠고, 이수했는가</h3>
+      <p>학습이 실제 성과로 연결됐는지 판정하는 영역입니다. 시청 기록 기반의 출결 관리, 문제은행에서 뽑는 시험, 자동·수동 채점, 과제 제출과 피드백, 설문을 거쳐 이수 기준을 충족한 학습자에게 수료증(인증서)을 발급합니다. 자격검정처럼 원서접수-응시-채점-자격 발급이 필요한 경우도 이 영역의 확장으로 다룰 수 있습니다.</p>
+      <h3>3) 데이터·통계 — 결과를 어떻게 증빙하고 개선하나</h3>
+      <p>앞선 운영과 평가가 남긴 기록이 쌓이는 곳입니다. 수료 현황, 월별 수강 통계, 회원 가입 추이 같은 지표를 대시보드에서 한눈에 확인하고, 감사나 보고에 필요한 이력을 뽑아냅니다. 여기서 나온 통계가 다음 교육의 운영 설계로 되돌아가면서 학습 관리가 한 바퀴 순환합니다.</p>
+
+      <h2>기능 지도 — 3대 영역별 대표 기능</h2>
+      <p>앞의 세 영역에 실제 LMS 기능을 매핑하면 아래와 같습니다. 아래는 범용 LMS 관리자 화면에서 제공하는 기능을 영역별로 정리한 표입니다. 제품마다 명칭은 달라도 큰 골격은 대체로 이 지도를 따릅니다.</p>
+
+      <div class="twrap">
+        <table>
+          <caption>LMS 3대 영역별 대표 기능 지도</caption>
+          <thead>
+            <tr><th>영역</th><th>대표 기능</th><th>담당자가 얻는 것</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>교육 운영</strong></td>
+              <td>과정관리, 마이크로러닝관리, 연수관리, 정기구독·도서·마켓관리, 콘텐츠관리, 회원관리, 발송(학습 독려)관리, 동영상 플랫폼</td>
+              <td>과정 개설과 수강 배정, 콘텐츠 제공, 미이수자 자동 독려까지 운영 반복 업무 자동화</td>
+            </tr>
+            <tr>
+              <td><strong>평가 · 이수</strong></td>
+              <td>시험관리(문제은행·랜덤 출제·자동 채점), 과제관리, 설문관리, 출결 관리, 인증서(수료증)관리, 자격관리(자격검정)</td>
+              <td>공정한 평가 운영과 이수 기준 판정, 수료증·자격 발급의 표준화</td>
+            </tr>
+            <tr>
+              <td><strong>데이터 · 통계</strong></td>
+              <td>대시보드(수료 현황·수강현황 통계), 주문·매출·환불 통계, 교육 이력 관리, 보고서</td>
+              <td>이수 증빙과 실적 보고, 데이터 기반의 다음 교육 개선</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>표에서 보듯 LMS 하나가 감당하는 범위는 단순한 ‘강의 재생’을 훌쩍 넘어섭니다. 그래서 도입 검토 시에는 “영상이 잘 나오는가”가 아니라 “우리 교육의 세 영역 흐름을 이 시스템이 끊김 없이 이어주는가”를 봐야 합니다.</p>
+
+      <figure>
+        <div class="ph">
+          <span class="tag">이미지 슬롯 · 발행 시 삽입</span>
+          <div>LMS 관리자 대시보드 스크린샷</div>
+          <div class="alt">alt: “LMS 관리자 대시보드에서 수료 현황과 월별 수강 통계, 과정 개설 현황을 한 화면에서 확인하는 모습” · 실제 화면은 매뉴얼 자산에서 교체</div>
+        </div>
+        <figcaption>관리자 대시보드는 수료 현황·수강 통계·매출 현황 같은 지표를 모듈 형태로 모아 보여줍니다.</figcaption>
+      </figure>
+
+      <h2>LMS와 LXP는 무엇이 다른가</h2>
+      <p>기본기를 잡을 때 함께 정리해두면 좋은 개념이 LXP(학습경험플랫폼, Learning Experience Platform)입니다. 둘의 차이는 ‘주어’가 누구인가로 갈립니다. LMS는 <strong>운영자가 교육을 관리</strong>하는 데 무게가 실려 있어 과정 배정·이수 판정·이력 관리가 중심입니다. 반면 LXP는 <strong>학습자가 스스로 콘텐츠를 탐색하고 추천받는</strong> 경험에 초점을 둡니다.</p>
+      <p>다만 현실에서는 경계가 빠르게 흐려지고 있습니다. 많은 LMS가 추천·개인화·대시보드 같은 LXP식 요소를 흡수하고 있기 때문입니다. 그래서 대부분의 조직은 이수 증빙과 운영 통제라는 뼈대를 LMS로 먼저 세우고, 여기에 학습자 경험을 강화하는 LXP 요소를 얹는 순서로 접근합니다. 처음 도입하는 담당자라면 운영 기반인 LMS부터 잡는 것이 정석입니다.</p>
+
+      <h2>담당자의 선택 관점 — 무엇부터 봐야 하나</h2>
+      <p>기능 목록을 비교하기 전에 순서가 있습니다. 기능은 많을수록 좋은 게 아니라 <strong>우리 교육 목적에 맞아야</strong> 좋습니다. 다음 네 가지 질문을 먼저 정리하면 후보를 훨씬 빠르게 좁힐 수 있습니다.</p>
+      <ul>
+        <li><strong>교육 목적이 무엇인가</strong> — 법정 의무교육 이수 관리인지, 자격검정 운영인지, 고객 대상 유료 강의 판매인지에 따라 필수 기능이 달라집니다.</li>
+        <li><strong>이수 증빙이 얼마나 엄격해야 하나</strong> — 감사·환급 대상 교육이라면 출결·수료 기록의 정확도와 보고서 출력이 최우선입니다.</li>
+        <li><strong>콘텐츠 형식과 표준을 지원하나</strong> — 기존에 보유한 SCORM(이러닝 콘텐츠 표준) 패키지나 외부 영상을 그대로 쓸 수 있는지 확인합니다.</li>
+        <li><strong>구축 방식은 무엇으로 하나</strong> — 서버를 직접 두는 자체 구축(설치형)과 월정액으로 쓰는 클라우드(임대형)는 초기 비용·보안·운영 부담이 서로 다릅니다.</li>
+      </ul>
+      <p>특히 보안과 인프라는 공공·대기업일수록 비중이 큽니다. 참고로 클라우드 방식에서는 CSAP(클라우드 보안인증) 보유 여부, 동시접속 대응 규모, 데이터 백업 체계 같은 운영 사양이 실질적인 비교 기준이 됩니다. 이 부분은 <a href="#" title="미리보기 — 캘린더 6번 글 준비 중">설치형 vs 클라우드 LMS 비교 글</a>에서, 목적별 선택 절차는 <a href="#" title="미리보기 — 샘플1 글">기업교육 LMS 선택 가이드</a>에서 더 자세히 다룹니다.</p>
+
+      <h2>정리 — LMS 기본기 한눈에</h2>
+      <p>LMS는 ‘온라인 강의 사이트’가 아니라 <strong>교육 운영·평가·데이터를 하나로 잇는 운영 체계</strong>입니다. 이 세 영역의 흐름으로 이해하면 어떤 제품을 보든 기능의 위치를 빠르게 파악할 수 있고, 도입 검토도 “우리 교육의 흐름을 끊김 없이 이어주는가”라는 한 축으로 단순해집니다. 규제 이수나 환급이 걸린 교육이라면 이수 증빙 정확도부터, 판매형 교육이라면 결제·통계 기능부터 확인하면 됩니다. 환급과정처럼 규정이 얽힌 운영은 <a href="#" title="미리보기 — 샘플2 글">환급과정 LMS 운영 가이드</a>에서 이어집니다. <span style="color:var(--faint)">(관련 규정·수치는 2026년 7월 발행 시점 기준이며, HRD-Net·관할 고시로 최신 여부를 확인하시기 바랍니다.)</span></p>
+
+      <div class="cta">우리 교육에 어떤 기능 조합이 맞는지 감이 잡히지 않는다면, 실제 관리자 화면을 <strong>무료 데모</strong>로 직접 확인해 보시는 편이 가장 빠릅니다.</div>
+    </div>
+
+    <!-- FAQ (FAQPage 스키마 소스) -->
+    <section class="faq">
+      <h2>자주 묻는 질문</h2>
+      <details open>
+        <summary>LMS와 이러닝(e-Learning)은 같은 말인가요?</summary>
+        <div class="ans">다릅니다. 이러닝은 온라인으로 학습하는 방식 전체를 가리키는 넓은 개념이고, LMS(학습관리시스템)는 그 이러닝을 기획·운영·평가·기록하도록 떠받치는 소프트웨어 플랫폼입니다. 강의 영상이 콘텐츠라면 LMS는 그 콘텐츠를 누구에게 배정하고, 얼마나 들었고, 이수했는지를 관리하는 운영 체계입니다.</div>
+      </details>
+      <details>
+        <summary>LMS의 핵심 기능 3가지만 꼽는다면 무엇인가요?</summary>
+        <div class="ans">교육 운영(과정 개설·수강 배정·학습 독려), 평가와 이수(시험·과제·출결·수료증 발급), 데이터와 통계(수료 현황·수강 통계·이력 관리)입니다. 이 세 영역이 하나의 흐름으로 연결돼야 담당자가 수작업으로 처리하던 반복 업무가 자동화됩니다.</div>
+      </details>
+      <details>
+        <summary>LMS와 LXP는 무엇이 다른가요?</summary>
+        <div class="ans">LMS는 ‘운영자가 교육을 관리’하는 데 최적화된 시스템이고, LXP(학습경험플랫폼)는 ‘학습자가 스스로 콘텐츠를 탐색·추천받는’ 경험에 초점을 둡니다. 최근에는 LMS가 추천·개인화 기능을 흡수하며 둘의 경계가 흐려지고 있어, 대부분의 기관은 운영 기반인 LMS를 먼저 갖춘 뒤 LXP 요소를 더하는 순서로 접근합니다.</div>
+      </details>
+    </section>
+
+    <!-- principle compliance -->
+    <div class="principles">
+      <p class="h">이 글에 적용된 SEO · 집필 원칙</p>
+      <div class="pgrid">
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>인라인 SVG 다이어그램</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>HTML 데이터표</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>FAQPage 스키마</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>스니펫용 정의 문장</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>내부링크 3</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>네이버 원문 리라이팅</span>
+        <span class="pill"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.2 3.2L13 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>운영자 렌즈</span>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="site">교육운영 노트 by 맑은소프트 · 미리보기 렌더 · 실제 발행 시 Astro 정적 빌드 + canonical/JSON-LD 주입</footer>
