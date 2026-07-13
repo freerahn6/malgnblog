@@ -19,9 +19,8 @@ BANR=open('malgnsoft_datauri.txt',encoding='utf-8').read().strip()
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
 BAN_RIGHT=f'<aside class="rail"><a href="https://www.malgnsoft.com" target="_blank" rel="noopener"><img src="{BANR}" alt="맑은소프트"></a></aside>'
 EXTRA_CSS=('.wrap{max-width:1320px}'
- '.article-shell{grid-template-columns:224px minmax(0,1fr) 176px;gap:44px}'
- 'aside.toc{max-height:calc(100vh - 104px);overflow-y:auto;overflow-x:hidden;padding-right:4px;scrollbar-width:thin}'
- 'aside.toc .side-banner{display:block;width:160px;margin:24px auto 4px;border-radius:12px;overflow:hidden;line-height:0;box-shadow:var(--shadow)}'
+ '.article-shell{grid-template-columns:176px minmax(0,1fr) 176px;gap:44px}'
+ 'aside.toc .side-banner{display:block;width:160px;margin:0 auto;border-radius:12px;overflow:hidden;line-height:0;box-shadow:var(--shadow)}'
  'aside.toc .side-banner img{width:100%;height:auto;display:block}'
  'aside.rail{position:sticky;top:88px;align-self:start;max-height:calc(100vh - 104px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}'
  'aside.rail a{display:block;width:160px;margin:0 auto;border-radius:12px;overflow:hidden;line-height:0;box-shadow:var(--shadow);transition:transform .18s}'
@@ -84,7 +83,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <a href="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu" target="_blank" rel="noopener" class="cta-btn">도입 문의</a>
 </div></header>
 <div class="wrap article-shell">
-<aside class="toc"><p class="lbl">목차</p><ul>{toc}</ul>{banl}</aside>
+<aside class="toc">{banl}</aside>
 <main class="doc">
 <nav class="breadcrumb"><a href="/">홈</a><span class="sep">›</span><a href="/{cat}/">{catlabel}</a><span class="sep">›</span><span>{title}</span></nav>
 <span class="cat-chip">{catlabel}</span>
