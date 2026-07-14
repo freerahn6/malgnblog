@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re, os, json, markdown, html as H
 BASE=os.path.dirname(os.path.abspath(__file__)); ART=BASE+"/articles"; PREV=BASE+"/_preview"; OUT=BASE+"/_deploy/public"; _D=BASE+"/_deploy"
+SITE="https://blog.malgnsoft.com"
 
 art_html=open(f"{PREV}/article.html",encoding='utf-8').read()
 idx_html=open(f"{PREV}/index.html",encoding='utf-8').read()
@@ -55,6 +56,15 @@ def parse(fp):
         if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author'):
             v=mm.group(2).strip().strip('"').strip("'")
             d[mm.group(1)]=v
+    # faq 블록 파싱 (q/a 쌍)
+    faq=[]
+    fmatch=re.search(r'(?ms)^faq:\s*\n(.*?)(?=^[a-zA-Z_]+:|\Z)', fm)
+    if fmatch:
+        for qm in re.finditer(r'-\s*q:\s*(.+?)\n\s*a:\s*(.+?)(?=\n\s*-\s*q:|\Z)', fmatch.group(1), re.S):
+            q=qm.group(1).strip().strip('"').strip("'")
+            ans=re.sub(r'\s+',' ',qm.group(2).strip().strip('"').strip("'"))
+            faq.append((q,ans))
+    d['faq']=faq
     # strip a leading H1 if any, and trailing FAQ header duplication left as-is
     body=re.sub(r'^\s*#\s+.*\n','',body,count=1)
     d['body']=body.strip()
@@ -82,10 +92,26 @@ def read_min(body):
     t=len(re.sub(r'\s','',re.sub(r'<[^>]+>','',body)))
     return max(3,round(t/500))
 
+PUBLISHER={"@type":"Organization","name":"맑은소프트","url":"https://www.malgnsoft.com","logo":{"@type":"ImageObject","url":"https://www.malgnsoft.com/img/logo.png"}}
+def jsonld(a,url):
+    blocks=[{"@context":"https://schema.org","@type":"Article","headline":a['title'],"description":a.get('description',''),
+      "datePublished":a.get('date',''),"dateModified":a.get('date',''),"inLanguage":"ko-KR",
+      "author":{"@type":"Person","name":a.get('author','교육운영 노트')},"publisher":PUBLISHER,
+      "image":"https://www.malgnsoft.com/img/og_logo.gif","mainEntityOfPage":{"@type":"WebPage","@id":url}},
+     {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+      {"@type":"ListItem","position":1,"name":"홈","item":SITE+"/"},
+      {"@type":"ListItem","position":2,"name":CATL[a['category']],"item":f"{SITE}/{a['category']}/"},
+      {"@type":"ListItem","position":3,"name":a['title'],"item":url}]}]
+    if a.get('faq'):
+        blocks.append({"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+          {"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":ans}} for q,ans in a['faq']]})
+    return ''.join(f'<script type="application/ld+json">{json.dumps(b,ensure_ascii=False)}</script>' for b in blocks)
+
 PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title} — 맑은소프트 블로그</title><meta name="description" content="{desc}">
 <link rel="canonical" href="https://blog.malgnsoft.com/{cat}/{slug}/">
-<meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:type" content="article">
+<meta property="og:type" content="article"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="https://blog.malgnsoft.com/{cat}/{slug}/"><meta property="og:site_name" content="맑은소프트 블로그"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif"><meta property="article:published_time" content="{date}"><meta name="twitter:card" content="summary_large_image">
+{jsonld}
 <style>{css}{extra}</style></head><body>
 <div class="progress" id="progress"></div>
 <header class="site"><div class="wrap">
@@ -123,10 +149,11 @@ for a in arts:
     namecard=(f'<div class="namecard"><div class="nc-av">{ainit}</div>'
         f'<div class="nc-body"><div class="nc-label">이 글을 쓴 사람</div>'
         f'<div class="nc-nm">{H.escape(aname)}<span class="nc-rl">{arole}</span></div></div></div>')
+    _url=f"{SITE}/{a['category']}/{a['slug']}/"
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
-        aname=H.escape(aname),arole=arole,ainit=ainit,namecard=namecard)
+        aname=H.escape(aname),arole=arole,ainit=ainit,namecard=namecard,jsonld=jsonld(a,_url))
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
     print("page:",a['category'],a['slug'],len(page)//1024,"KB toc",len(toc))
@@ -190,5 +217,46 @@ home=home_prefix+home+'</body></html>'
 os.makedirs(OUT,exist_ok=True)
 open(f"{OUT}/index.html",'w',encoding='utf-8').write(home)
 print("HOME:",len(home)//1024,"KB, cards:",len(arts)-1,"+featured")
+
+# ---- 카테고리 허브 페이지 ----
+CATDESC={'lms':'LMS·이러닝 구축과 운영에 관한 실전 가이드','hrd':'기업교육·HRD 담당자를 위한 실무 지식','certification':'자격검정 시스템 구축·운영 가이드','video':'동영상·콘텐츠 플랫폼 이야기','edutech':'에듀테크·교육 AI 트렌드와 운영자 대응','news':'맑은소프트 소식과 신뢰자산'}
+made_cats=[]
+for cat in CATL:
+    cat_arts=[a for a in sorted(arts,key=lambda x:x.get('date',''),reverse=True) if a['category']==cat]
+    if not cat_arts: continue
+    made_cats.append(cat)
+    ccards=''
+    for a in cat_arts:
+        _an,_ar,_ae,_ai=author_of(a)
+        ccards+=('<article class="card">'+card_cover(a)+
+            f'<div class="body"><h3><a class="clink" href="/{a["category"]}/{a["slug"]}/">{H.escape(a["title"])}</a></h3><p class="excerpt">{H.escape(excerpt(a.get("description","")))}</p>'
+            f'<div class="meta"><span class="avatar">{_ai}</span><span class="who">{H.escape(_an)}</span>'
+            f'<span class="dot"></span><span class="num">{a.get("date","").replace("-",".")}</span></div></div></article>')
+    chead=(head.replace('<h1>맑은소프트 블로그</h1>',f'<h1>{CATL[cat]}</h1>',1)
+        .replace('<p>국내 1위 LMS 맑은소프트에서 전하는 소식과 인사이트</p>',f'<p>{CATDESC[cat]}</p>',1)
+        .replace('<title>맑은소프트 블로그 — 교육을 운영하는 사람을 위한 LMS 실전 지식</title>',f'<title>{CATL[cat]} — 맑은소프트 블로그</title>',1))
+    cpage=chead+'  <div class="grid">\n'+ccards+'\n  </div>\n'+tail
+    cpage=cpage.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
+    cprefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+     '<meta name="viewport" content="width=device-width,initial-scale=1">'
+     f'<meta name="description" content="{CATDESC[cat]}"><link rel="canonical" href="{SITE}/{cat}/">')
+    cpage=cprefix+cpage+'</body></html>'
+    os.makedirs(f"{OUT}/{cat}",exist_ok=True)
+    open(f"{OUT}/{cat}/index.html",'w',encoding='utf-8').write(cpage)
+print("CATEGORY pages:",made_cats)
+
+# ---- sitemap.xml + robots.txt ----
+gmax=max((a.get('date','') for a in arts), default='2026-07-14')
+entries=[(SITE+"/",gmax,"daily")]
+entries+=[(f"{SITE}/{c}/",gmax,"weekly") for c in made_cats]
+entries+=[(f"{SITE}/{a['category']}/{a['slug']}/",a.get('date',gmax),"monthly") for a in arts]
+sm=['<?xml version="1.0" encoding="UTF-8"?>','<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+for loc,mod,freq in entries:
+    sm.append(f'  <url><loc>{loc}</loc><lastmod>{mod}</lastmod><changefreq>{freq}</changefreq></url>')
+sm.append('</urlset>')
+open(f"{OUT}/sitemap.xml",'w',encoding='utf-8').write('\n'.join(sm)+'\n')
+open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n")
+print("sitemap.xml:",len(entries),"urls | robots.txt")
+
 print("TOTAL articles:",len(arts))
 EOF=1
