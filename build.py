@@ -29,11 +29,11 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  'aside.rail a:hover,aside.toc .side-banner:hover{transform:translateY(-3px)}'
  'aside.rail img{width:100%;height:auto;display:block}'
  '.byline .brole{color:var(--accent);font-weight:600;margin-left:6px;font-size:13px}'
- '.namecard{display:flex;align-items:center;gap:16px;margin:46px 0 6px;padding:20px 22px;background:var(--surface-2);border:1px solid var(--border);border-radius:16px}'
- '.namecard .nc-av{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;flex:none}'
- '.namecard .nc-nm{font-size:17px;font-weight:800;color:var(--text)}'
- '.namecard .nc-rl{font-size:13px;font-weight:700;color:var(--accent);margin-left:7px}'
- '.namecard .nc-ex{font-size:13.5px;color:var(--muted);margin-top:3px}'
+ '.namecard{display:flex;align-items:center;gap:16px;margin:48px 0 8px;padding:18px 22px;background:linear-gradient(135deg,var(--accent-soft),transparent 75%);border:1px solid var(--border);border-radius:18px}'
+ '.namecard .nc-av{width:50px;height:50px;border-radius:50%;background:var(--surface);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:21px;flex:none;box-shadow:inset 0 0 0 2px var(--accent),0 2px 6px rgba(20,30,50,.08)}'
+ '.namecard .nc-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}'
+ '.namecard .nc-nm{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-0.01em}'
+ '.namecard .nc-rl{font-size:13.5px;font-weight:600;color:var(--muted);margin-left:8px}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}')
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
@@ -121,8 +121,8 @@ for a in arts:
     hero=IMG.get(a['slug'],COVERS[1])
     aname,arole,aexp,ainit=author_of(a)
     namecard=(f'<div class="namecard"><div class="nc-av">{ainit}</div>'
-        f'<div><div class="nc-nm">{H.escape(aname)}<span class="nc-rl">{arole}</span></div>'
-        f'<div class="nc-ex">맑은소프트 블로그 전담팀 · {aexp}</div></div></div>')
+        f'<div class="nc-body"><div class="nc-label">이 글을 쓴 사람</div>'
+        f'<div class="nc-nm">{H.escape(aname)}<span class="nc-rl">{arole}</span></div></div></div>')
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
