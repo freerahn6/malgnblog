@@ -9,7 +9,7 @@ tags: [기업교육 LMS, 학습관리시스템, LMS 선택]
 date: 2026-07-14
 updated: 2026-07-14
 thumbnail: /assets/img/lms/lms-selection-guide-for-corporate-training/cover.webp
-author: 교육운영 노트 by 맑은소프트
+author: 안기범
 faq:
   - q: LMS와 LXP는 무엇이 다른가요?
     a: LMS(학습관리시스템)는 과정 개설·수강 배정·진도 관리·평가·수료 처리 등 교육 '운영'에 무게를 둔 시스템입니다. LXP(학습경험플랫폼)는 학습자가 콘텐츠를 스스로 탐색하고 추천받는 '경험'에 무게를 둡니다. 기업의 법정의무교육·환급과정처럼 이수와 증빙이 중요한 교육은 LMS가 기본이며, 자기주도 학습 문화를 얹고 싶다면 LXP 요소를 함께 검토하는 방식이 현실적입니다.

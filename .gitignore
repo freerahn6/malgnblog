@@ -18,3 +18,5 @@ _scratch/
 
 # 빌드 생성물(build.py로 재생성)
 _deploy/public/
+_deploy/site.zip
+_deploy/resp.json

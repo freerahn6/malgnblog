@@ -8,7 +8,7 @@ funnel: TOFU
 date: 2026-08-21
 updated: 2026-08-21
 thumbnail: "./images/why-own-video-platform-thumb.webp"
-author: "교육운영 노트 by 맑은소프트"
+author: 이채영
 tags: [자체 동영상 플랫폼, 기업 OTT, 위캔디오]
 faq:
   - q: "교육 영상을 꼭 자체 동영상 플랫폼에 올려야 하나요? 유튜브는 안 되나요?"

@@ -28,9 +28,18 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  'aside.rail a{display:block;width:160px;margin:0 auto;border-radius:12px;overflow:hidden;line-height:0;box-shadow:var(--shadow);transition:transform .18s}'
  'aside.rail a:hover,aside.toc .side-banner:hover{transform:translateY(-3px)}'
  'aside.rail img{width:100%;height:auto;display:block}'
+ '.byline .brole{color:var(--accent);font-weight:600;margin-left:6px;font-size:13px}'
+ '.namecard{display:flex;align-items:center;gap:16px;margin:46px 0 6px;padding:20px 22px;background:var(--surface-2);border:1px solid var(--border);border-radius:16px}'
+ '.namecard .nc-av{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;flex:none}'
+ '.namecard .nc-nm{font-size:17px;font-weight:800;color:var(--text)}'
+ '.namecard .nc-rl{font-size:13px;font-weight:700;color:var(--accent);margin-left:7px}'
+ '.namecard .nc-ex{font-size:13.5px;color:var(--muted);margin-top:3px}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}')
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
+AUTHORS={'안기범':('팀장','블로그 운영·콘텐츠 50년','안'),'강이슬':('과장','이러닝 20년','강'),'이채영':('대리','에듀테크 15년','이'),'한다현':('대리','기업교육 10년','한')}
+def author_of(a):
+    n=a.get('author','교육운영 노트'); r,e,i=AUTHORS.get(n,('','맑은소프트 블로그팀','교')); return n,r,e,i
 COVER={'lms-selection-guide-for-corporate-training':0,'what-is-lms':1,'refund-training-lms-operation-guide':2,
  'legal-mandatory-training-online':3,'self-hosted-vs-cloud-lms':4,'certification-system-build-guide':5,
  'what-is-microlearning':6,'why-own-video-platform':7,'lms-case-studies-3':8,'online-exam-anti-cheating-setup':9,
@@ -91,9 +100,10 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <span class="cat-chip">{catlabel}</span>
 <h1 class="title">{title}</h1>
 <p class="dek">{desc}</p>
-<div class="byline"><span class="avatar">교</span><span class="who">교육운영 노트 by 맑은소프트</span><span class="m"><span class="dot"></span><span class="num">{date}</span><span class="dot"></span><span>읽는 시간 {rt}분</span></span></div>
+<div class="byline"><span class="avatar">{ainit}</span><span class="who">{aname}<span class="brole">{arole}</span></span><span class="m"><span class="dot"></span><span class="num">{date}</span><span class="dot"></span><span>읽는 시간 {rt}분</span></span></div>
 <div class="hero-img"><img src="{hero}" alt="{title}"></div>
 <article>{body}</article>
+{namecard}
 </main>{banr}</div>
 <footer class="site"><div class="wrap"><span class="plate"><img src="{logo}" alt="맑은소프트"></span><span>맑은소프트 블로그 · (주)맑은소프트</span><span style="margin-left:auto">© 맑은소프트</span></div></footer>
 {fab}
@@ -109,9 +119,14 @@ for a in arts:
         _ti.append(f'<li><a href="#{sid}"{cls}>{H.escape(txt)}</a></li>')
     toc_html=''.join(_ti)
     hero=IMG.get(a['slug'],COVERS[1])
+    aname,arole,aexp,ainit=author_of(a)
+    namecard=(f'<div class="namecard"><div class="nc-av">{ainit}</div>'
+        f'<div><div class="nc-nm">{H.escape(aname)}<span class="nc-rl">{arole}</span></div>'
+        f'<div class="nc-ex">맑은소프트 블로그 전담팀 · {aexp}</div></div></div>')
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
-        rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT)
+        rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
+        aname=H.escape(aname),arole=arole,ainit=ainit,namecard=namecard)
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
     print("page:",a['category'],a['slug'],len(page)//1024,"KB toc",len(toc))
@@ -151,17 +166,19 @@ def card_cover(a,extra=''):
     return (f'<div class="cover"><img class="cover-img" loading="lazy" '
             f'src="{IMG.get(a["slug"],COVERS[1])}" alt="{H.escape(a["title"])}"><span class="scrim"></span>'
             f'<span class="cat">{CATL[a["category"]]}</span>{extra}</div>')
+_fn,_fr,_fe,_fi=author_of(feat)
 featured_html=('<article class="featured">'+card_cover(feat,'<span class="ctitle">HEADLINE</span>')+
     f'<div class="body"><span class="flag">헤드라인</span><h2><a class="clink" href="/{feat["category"]}/{feat["slug"]}/">{H.escape(feat["title"])}</a></h2>'
     f'<p>{H.escape(excerpt(feat.get("description",""),120))}</p>'
-    f'<div class="meta" style="padding-top:6px"><span class="avatar">교</span><span class="who">교육운영 노트</span>'
+    f'<div class="meta" style="padding-top:6px"><span class="avatar">{_fi}</span><span class="who">{H.escape(_fn)}</span>'
     f'<span class="dot"></span><span class="num">{feat.get("date","").replace("-",".")}</span></div></div></article>')
 rest=[a for a in sorted(arts,key=lambda x:x.get('date',''),reverse=True) if a['slug']!=feat['slug']][:9]
 cards=''
 for a in rest:
+    _an,_ar,_ae,_ai=author_of(a)
     cards+=('<article class="card">'+card_cover(a)+
         f'<div class="body"><h3><a class="clink" href="/{a["category"]}/{a["slug"]}/">{H.escape(a["title"])}</a></h3><p class="excerpt">{H.escape(excerpt(a.get("description","")))}</p>'
-        f'<div class="meta"><span class="avatar">교</span><span class="who">교육운영 노트</span>'
+        f'<div class="meta"><span class="avatar">{_ai}</span><span class="who">{H.escape(_an)}</span>'
         f'<span class="dot"></span><span class="num">{a.get("date","").replace("-",".")}</span></div></div></article>')
 home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
  '<meta name="viewport" content="width=device-width,initial-scale=1">'

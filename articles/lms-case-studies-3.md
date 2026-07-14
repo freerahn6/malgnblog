@@ -8,7 +8,7 @@ funnel: BOFU
 date: 2026-08-14
 updated: 2026-08-14
 thumbnail: ./images/lms-case-studies-3-thumb.webp
-author: "교육운영 노트 by 맑은소프트"
+author: 안기범
 tags: [LMS 구축 사례, 이러닝 도입, 기업교육]
 faq:
   - q: "우리 조직 유형에 맞는 LMS가 따로 있나요?"

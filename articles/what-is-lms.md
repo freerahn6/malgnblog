@@ -8,7 +8,7 @@ funnel: TOFU
 date: 2026-07-24
 updated: 2026-07-24
 thumbnail: ./images/what-is-lms-cover.webp
-author: "교육운영 노트 by 맑은소프트"
+author: 강이슬
 tags: [LMS, 학습관리시스템, 이러닝]
 faq:
   - q: "LMS와 이러닝(e-Learning)은 같은 말인가요?"

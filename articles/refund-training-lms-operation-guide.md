@@ -6,7 +6,7 @@ slug: "refund-training-lms-operation-guide"
 tags: ["고용보험 환급과정", "환급 LMS", "기업교육 운영"]
 date: "2026-07-17"
 updated: "2026-07-17"
-author: "교육운영 노트 by 맑은소프트"
+author: 한다현
 funnel: "MOFU"
 cluster: "B"
 thumbnail: "/assets/img/hrd/refund-training-lms-operation-guide/cover.webp"

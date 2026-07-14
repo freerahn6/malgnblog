@@ -8,7 +8,7 @@ funnel: TOFU
 date: 2026-08-11
 updated: 2026-08-11
 thumbnail: ./images/lms-vs-lxp-cover.webp
-author: "교육운영 노트 by 맑은소프트"
+author: 이채영
 tags: [LMS, LXP, 학습경험플랫폼]
 faq:
   - q: "LMS와 LXP의 가장 큰 차이를 한마디로 말하면 무엇인가요?"

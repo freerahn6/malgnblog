@@ -8,7 +8,7 @@ funnel: MOFU
 date: 2026-07-28
 updated: 2026-07-28
 thumbnail: ./images/legal-mandatory-training-online-thumb.webp
-author: "교육운영 노트 by 맑은소프트"
+author: 한다현
 tags: [법정의무교육, 온라인 이수관리, 기업교육]
 faq:
   - q: "법정의무교육은 온라인으로 이수해도 인정되나요?"
