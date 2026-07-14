@@ -92,7 +92,7 @@ def read_min(body):
     t=len(re.sub(r'\s','',re.sub(r'<[^>]+>','',body)))
     return max(3,round(t/500))
 
-PUBLISHER={"@type":"Organization","name":"맑은소프트","url":"https://www.malgnsoft.com","logo":{"@type":"ImageObject","url":"https://www.malgnsoft.com/img/logo.png"}}
+PUBLISHER={"@type":"Organization","name":"맑은소프트","url":"https://www.malgnsoft.com","logo":{"@type":"ImageObject","url":"https://www.malgnsoft.com/img/logo.png"},"sameAs":["https://www.malgnsoft.com","https://blog.naver.com/malgnlms"]}
 def jsonld(a,url):
     blocks=[{"@context":"https://schema.org","@type":"Article","headline":a['title'],"description":a.get('description',''),
       "datePublished":a.get('date',''),"dateModified":a.get('date',''),"inLanguage":"ko-KR",
@@ -207,10 +207,14 @@ for a in rest:
         f'<div class="body"><h3><a class="clink" href="/{a["category"]}/{a["slug"]}/">{H.escape(a["title"])}</a></h3><p class="excerpt">{H.escape(excerpt(a.get("description","")))}</p>'
         f'<div class="meta"><span class="avatar">{_ai}</span><span class="who">{H.escape(_an)}</span>'
         f'<span class="dot"></span><span class="num">{a.get("date","").replace("-",".")}</span></div></div></article>')
+_org={"@context":"https://schema.org","@type":"Organization","name":"맑은소프트","alternateName":"MALGNSOFT INC.","url":"https://www.malgnsoft.com","logo":"https://www.malgnsoft.com/img/logo.png","sameAs":["https://www.malgnsoft.com","https://blog.naver.com/malgnlms"]}
+_web={"@context":"https://schema.org","@type":"WebSite","name":"맑은소프트 블로그","url":SITE,"inLanguage":"ko-KR","publisher":{"@type":"Organization","name":"맑은소프트"}}
+HOME_LD=''.join(f'<script type="application/ld+json">{json.dumps(x,ensure_ascii=False)}</script>' for x in (_org,_web))
 home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
  '<meta name="viewport" content="width=device-width,initial-scale=1">'
  '<meta name="description" content="교육을 운영하는 사람을 위한 LMS 실전 지식. 기업교육·HRD 담당자를 위한 이러닝·자격검정·에듀테크 인사이트.">'
- '<link rel="canonical" href="https://blog.malgnsoft.com/">')
+ '<meta property="og:type" content="website"><meta property="og:title" content="맑은소프트 블로그"><meta property="og:url" content="'+SITE+'/"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif">'
+ '<link rel="canonical" href="https://blog.malgnsoft.com/">'+HOME_LD)
 home=head+featured_html+'\n\n  <div class="grid">\n'+cards+'\n  </div>\n'+tail
 home=home.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
 home=home_prefix+home+'</body></html>'
@@ -255,7 +259,9 @@ for loc,mod,freq in entries:
     sm.append(f'  <url><loc>{loc}</loc><lastmod>{mod}</lastmod><changefreq>{freq}</changefreq></url>')
 sm.append('</urlset>')
 open(f"{OUT}/sitemap.xml",'w',encoding='utf-8').write('\n'.join(sm)+'\n')
-open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(f"User-agent: *\nAllow: /\n\nSitemap: {SITE}/sitemap.xml\n")
+_ai_bots=['GPTBot','OAI-SearchBot','ChatGPT-User','PerplexityBot','ClaudeBot','Claude-Web','Google-Extended','CCBot','Bingbot','Applebot-Extended']
+_robots="User-agent: *\nAllow: /\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
+open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(_robots)
 print("sitemap.xml:",len(entries),"urls | robots.txt")
 
 print("TOTAL articles:",len(arts))
