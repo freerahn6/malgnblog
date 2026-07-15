@@ -4,8 +4,8 @@ description: "고용보험 환급과정을 LMS로 운영하는 전 과정을 정
 category: "hrd"
 slug: "refund-training-lms-operation-guide"
 tags: ["고용보험 환급과정", "환급 LMS", "기업교육 운영"]
-date: "2026-07-17"
-updated: "2026-07-17"
+date: 2026-06-24
+updated: 2026-06-24
 author: 한다현
 funnel: "MOFU"
 cluster: "B"

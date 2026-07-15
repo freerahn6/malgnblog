@@ -6,8 +6,8 @@ cluster: C
 slug: association-integrated-operation
 funnel: BOFU
 tags: [협회 자격관리, 자격검정 시스템, 회원 교육 통합관리]
-date: 2026-09-25
-updated: 2026-09-25
+date: 2026-07-14
+updated: 2026-07-14
 thumbnail: /assets/img/certification/association-integrated-operation/cover.webp
 author: 안기범
 faq:

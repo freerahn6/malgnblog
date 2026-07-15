@@ -6,8 +6,8 @@ cluster: E
 slug: employee-ai-literacy-training
 funnel: MOFU
 tags: [임직원 AI 교육, AI 리터러시 교육, 전사 AI 교육]
-date: 2026-09-18
-updated: 2026-09-18
+date: 2026-07-12
+updated: 2026-07-12
 thumbnail: /assets/img/edutech/employee-ai-literacy-training/cover.webp
 author: 이채영
 faq:

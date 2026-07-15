@@ -6,8 +6,8 @@ cluster: A
 slug: lms-selection-guide-for-corporate-training
 funnel: TOFU
 tags: [기업교육 LMS, 학습관리시스템, LMS 선택]
-date: 2026-07-14
-updated: 2026-07-14
+date: 2026-06-23
+updated: 2026-06-23
 thumbnail: /assets/img/lms/lms-selection-guide-for-corporate-training/cover.webp
 author: 안기범
 faq:

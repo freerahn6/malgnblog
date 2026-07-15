@@ -6,8 +6,8 @@ cluster: D
 slug: ai-subtitles-multilingual-video
 funnel: MOFU
 tags: [AI 자막 생성, 영상 다국어 자막, 교육영상 접근성]
-date: 2026-09-11
-updated: 2026-09-11
+date: 2026-07-10
+updated: 2026-07-10
 thumbnail: /assets/img/video/ai-subtitles-multilingual-video/cover.webp
 author: 이채영
 faq:

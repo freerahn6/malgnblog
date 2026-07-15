@@ -6,8 +6,8 @@ cluster: B
 slug: training-effectiveness-kirkpatrick
 funnel: MOFU
 tags: [교육효과 측정, 교육 만족도 설문, 커크패트릭]
-date: 2026-09-22
-updated: 2026-09-22
+date: 2026-07-13
+updated: 2026-07-13
 thumbnail: /assets/img/hrd/training-effectiveness-kirkpatrick/cover.webp
 author: 한다현
 faq:

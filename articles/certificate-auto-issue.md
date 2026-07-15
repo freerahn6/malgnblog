@@ -5,8 +5,8 @@ category: hrd
 cluster: B
 slug: certificate-auto-issue
 funnel: MOFU
-date: 2026-08-18
-updated: 2026-08-18
+date: 2026-07-03
+updated: 2026-07-03
 thumbnail: "./images/certificate-auto-issue-thumb.webp"
 tags: [수료증 자동발급, 인증서 관리, 이수증]
 author: 한다현

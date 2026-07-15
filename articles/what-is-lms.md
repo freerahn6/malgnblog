@@ -5,8 +5,8 @@ category: lms
 cluster: A
 slug: what-is-lms
 funnel: TOFU
-date: 2026-07-24
-updated: 2026-07-24
+date: 2026-06-26
+updated: 2026-06-26
 thumbnail: ./images/what-is-lms-cover.webp
 author: 강이슬
 tags: [LMS, 학습관리시스템, 이러닝]

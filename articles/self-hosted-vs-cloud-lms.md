@@ -6,8 +6,8 @@ cluster: A
 slug: self-hosted-vs-cloud-lms
 funnel: TOFU
 tags: [LMS 자체개발, 클라우드 LMS, LMS 비용]
-date: 2026-07-31
-updated: 2026-07-31
+date: 2026-06-28
+updated: 2026-06-28
 thumbnail: /assets/img/lms/self-hosted-vs-cloud-lms/cover.webp
 author: 강이슬
 faq:

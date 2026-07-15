@@ -5,8 +5,8 @@ category: hrd
 cluster: B
 slug: legal-mandatory-training-online
 funnel: MOFU
-date: 2026-07-28
-updated: 2026-07-28
+date: 2026-06-27
+updated: 2026-06-27
 thumbnail: ./images/legal-mandatory-training-online-thumb.webp
 author: 한다현
 tags: [법정의무교육, 온라인 이수관리, 기업교육]

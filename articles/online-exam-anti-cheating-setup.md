@@ -6,8 +6,8 @@ cluster: A
 slug: online-exam-anti-cheating-setup
 funnel: MOFU
 tags: [온라인 시험, 문제은행, 부정행위 방지]
-date: 2026-08-07
-updated: 2026-08-07
+date: 2026-06-30
+updated: 2026-06-30
 thumbnail: /assets/img/lms/online-exam-anti-cheating-setup/cover.webp
 author: 강이슬
 faq:

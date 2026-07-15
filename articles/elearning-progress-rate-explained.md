@@ -6,8 +6,8 @@ cluster: A
 slug: elearning-progress-rate-explained
 funnel: TOFU
 tags: [이러닝 진도율, 진도율 계산, 수료 기준]
-date: 2026-09-08
-updated: 2026-09-08
+date: 2026-07-09
+updated: 2026-07-09
 thumbnail: /assets/img/lms/elearning-progress-rate-explained/cover.webp
 author: 강이슬
 faq:

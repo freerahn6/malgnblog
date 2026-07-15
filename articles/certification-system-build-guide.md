@@ -6,8 +6,8 @@ cluster: C
 slug: certification-system-build-guide
 funnel: BOFU
 tags: [자격검정 시스템, 민간자격 발급, 자격증 LMS]
-date: 2026-07-21
-updated: 2026-07-21
+date: 2026-06-25
+updated: 2026-06-25
 thumbnail: /assets/img/certification/certification-system-build-guide/cover.webp
 author: 안기범
 faq:

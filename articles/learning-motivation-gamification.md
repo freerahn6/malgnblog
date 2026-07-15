@@ -6,8 +6,8 @@ cluster: E
 slug: learning-motivation-gamification
 funnel: TOFU
 tags: [교육 게이미피케이션, 학습 동기부여, 완주율]
-date: 2026-09-15
-updated: 2026-09-15
+date: 2026-07-11
+updated: 2026-07-11
 thumbnail: /assets/img/edutech/learning-motivation-gamification/cover.webp
 author: 이채영
 faq:

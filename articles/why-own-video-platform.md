@@ -5,8 +5,8 @@ category: video
 cluster: D
 slug: why-own-video-platform
 funnel: TOFU
-date: 2026-08-21
-updated: 2026-08-21
+date: 2026-07-04
+updated: 2026-07-04
 thumbnail: "./images/why-own-video-platform-thumb.webp"
 author: 이채영
 tags: [자체 동영상 플랫폼, 기업 OTT, 위캔디오]

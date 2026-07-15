@@ -6,8 +6,8 @@ cluster: E
 slug: what-is-microlearning
 funnel: TOFU
 tags: [마이크로러닝, 이러닝 설계, 학습 몰입]
-date: 2026-08-04
-updated: 2026-08-04
+date: 2026-06-29
+updated: 2026-06-29
 thumbnail: ./images/what-is-microlearning-thumb.webp
 author: 이채영
 faq:

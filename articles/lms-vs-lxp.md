@@ -5,8 +5,8 @@ category: edutech
 cluster: E
 slug: lms-vs-lxp
 funnel: TOFU
-date: 2026-08-11
-updated: 2026-08-11
+date: 2026-07-01
+updated: 2026-07-01
 thumbnail: ./images/lms-vs-lxp-cover.webp
 author: 이채영
 tags: [LMS, LXP, 학습경험플랫폼]

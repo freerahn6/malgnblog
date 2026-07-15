@@ -6,8 +6,8 @@ cluster: B
 slug: annual-training-plan-calendar
 funnel: MOFU
 tags: [연간 교육계획, 기업교육 운영, 법정의무교육 일정]
-date: 2026-08-28
-updated: 2026-08-28
+date: 2026-07-06
+updated: 2026-07-06
 thumbnail: /assets/img/hrd/annual-training-plan-calendar/cover.webp
 author: 한다현
 faq:

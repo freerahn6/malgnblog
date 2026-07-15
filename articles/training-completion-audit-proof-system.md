@@ -6,8 +6,8 @@ cluster: B
 slug: training-completion-audit-proof-system
 funnel: MOFU
 tags: [교육 이수현황 관리, 교육 이수 증빙, 수료 관리]
-date: 2026-09-01
-updated: 2026-09-01
+date: 2026-07-07
+updated: 2026-07-07
 thumbnail: /assets/img/hrd/training-completion-audit-proof-system/cover.webp
 author: 안기범
 faq:

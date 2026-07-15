@@ -6,8 +6,8 @@ cluster: A
 slug: auto-reminder-incomplete-learners
 funnel: MOFU
 tags: [수강 독려 알림, 미이수자 관리, 완주율]
-date: 2026-09-04
-updated: 2026-09-04
+date: 2026-07-08
+updated: 2026-07-08
 thumbnail: /assets/img/lms/auto-reminder-incomplete-learners/cover.webp
 author: 강이슬
 faq:

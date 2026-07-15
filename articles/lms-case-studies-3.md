@@ -5,8 +5,8 @@ category: news
 cluster: F
 slug: lms-case-studies-3
 funnel: BOFU
-date: 2026-08-14
-updated: 2026-08-14
+date: 2026-07-02
+updated: 2026-07-02
 thumbnail: ./images/lms-case-studies-3-thumb.webp
 author: 안기범
 tags: [LMS 구축 사례, 이러닝 도입, 기업교육]

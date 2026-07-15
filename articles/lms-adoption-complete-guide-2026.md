@@ -6,8 +6,8 @@ cluster: A
 slug: lms-adoption-complete-guide-2026
 funnel: TOFU
 tags: [LMS 도입, LMS 구축 비용, 이러닝 솔루션 비교]
-date: 2026-08-25
-updated: 2026-08-25
+date: 2026-07-05
+updated: 2026-07-05
 thumbnail: /assets/img/lms/lms-adoption-complete-guide-2026/cover.webp
 author: 안기범
 faq:
