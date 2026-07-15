@@ -2,6 +2,7 @@
 import re, os, json, markdown, html as H
 BASE=os.path.dirname(os.path.abspath(__file__)); ART=BASE+"/articles"; PREV=BASE+"/_preview"; OUT=BASE+"/_deploy/public"; _D=BASE+"/_deploy"
 SITE="https://blog.malgnsoft.com"
+TRACK='<script>(function(){var p=location.pathname;if(p.indexOf("/admin")===0)return;try{fetch("/api/track?p="+encodeURIComponent(p),{method:"POST",keepalive:true})}catch(e){}})();</script>'
 
 art_html=open(f"{PREV}/article.html",encoding='utf-8').read()
 idx_html=open(f"{PREV}/index.html",encoding='utf-8').read()
@@ -154,6 +155,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <footer class="site"><div class="wrap"><span class="plate"><img src="{logo}" alt="맑은소프트"></span><span>맑은소프트 블로그 · (주)맑은소프트</span><span style="margin-left:auto">© 맑은소프트</span></div></footer>
 {fab}
 {script}
+{track}
 </body></html>'''
 
 for a in arts:
@@ -178,7 +180,7 @@ for a in arts:
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
-        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url))
+        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK)
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
     print("page:",a['category'],a['slug'],len(page)//1024,"KB toc",len(toc))
@@ -244,7 +246,7 @@ home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
  '<link rel="alternate" type="application/rss+xml" title="맑은소프트 블로그 RSS" href="https://blog.malgnsoft.com/rss.xml">'+HOME_LD)
 home=head+featured_html+'\n\n  <div class="grid">\n'+cards+'\n  </div>\n'+tail
 home=home.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
-home=home_prefix+home+'</body></html>'
+home=home_prefix+home+TRACK+'</body></html>'
 os.makedirs(OUT,exist_ok=True)
 open(f"{OUT}/index.html",'w',encoding='utf-8').write(home)
 print("HOME:",len(home)//1024,"KB, cards:",len(arts)-1,"+featured")
@@ -271,7 +273,7 @@ for cat in CATL:
     cprefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
      '<meta name="viewport" content="width=device-width,initial-scale=1">'
      f'<meta name="description" content="{CATDESC[cat]}"><link rel="canonical" href="{SITE}/{cat}/">')
-    cpage=cprefix+cpage+'</body></html>'
+    cpage=cprefix+cpage+TRACK+'</body></html>'
     os.makedirs(f"{OUT}/{cat}",exist_ok=True)
     open(f"{OUT}/{cat}/index.html",'w',encoding='utf-8').write(cpage)
 print("CATEGORY pages:",made_cats)
@@ -287,7 +289,7 @@ for loc,mod,freq in entries:
 sm.append('</urlset>')
 open(f"{OUT}/sitemap.xml",'w',encoding='utf-8').write('\n'.join(sm)+'\n')
 _ai_bots=['Yeti','Daum','GPTBot','OAI-SearchBot','ChatGPT-User','PerplexityBot','ClaudeBot','Claude-Web','Google-Extended','CCBot','Bingbot','Applebot-Extended']
-_robots="User-agent: *\nAllow: /\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
+_robots="User-agent: *\nAllow: /\nDisallow: /admin\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
 open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(_robots)
 print("sitemap.xml:",len(entries),"urls | robots.txt")
 
@@ -314,6 +316,94 @@ _rss=('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="ht
     f'{_rss_items}</channel></rss>')
 open(f"{OUT}/rss.xml",'w',encoding='utf-8').write(_rss)
 print("rss.xml:",len(arts),"items")
+
+# ---- /admin 통계 대시보드 (비번 gamma, 데이터는 /api/stats) ----
+_tmap={"/":"블로그 홈"}
+for c in made_cats: _tmap[f"/{c}/"]=CATL[c]+" (카테고리)"
+for a in arts: _tmap[f"/{a['category']}/{a['slug']}/"]=a['title']
+ADMIN=r"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>맑은소프트 블로그 · 통계 관리</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;--accent-soft:#e7efff}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--accent-soft:#1a2540}}
+:root[data-theme="dark"]{--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--accent-soft:#1a2540}
+:root[data-theme="light"]{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;--accent-soft:#e7efff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:24px 18px 60px}
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gatecard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(20,30,50,.10);text-align:center}
+.gatecard h1{font-size:19px;margin:0 0 4px}.gatecard p{color:var(--muted);font-size:13px;margin:0 0 22px}
+.gatecard input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);text-align:center;letter-spacing:.1em}
+.gatecard input:focus{outline:none;border-color:var(--accent)}
+.gatecard button{width:100%;margin-top:12px;padding:12px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.err{color:#e5484d;font-size:13px;margin-top:12px;min-height:18px}
+#dash{display:none}.top{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.top h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.02em}.top .sp{flex:1}.top .meta{color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:7px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}@media(max-width:560px){.cards{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.stat .lbl{color:var(--muted);font-size:13px;font-weight:600}.stat .val{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:22px}.panel h2{font-size:15px;margin:0 0 16px;font-weight:800}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-size:12px;font-weight:700}td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}td.rank{width:34px;color:var(--muted);font-weight:700}
+.bar{height:6px;background:var(--accent-soft);border-radius:3px;margin-top:5px}.bar span{display:block;height:100%;background:var(--accent);border-radius:3px}
+a{color:var(--accent);text-decoration:none}
+</style></head><body>
+<div id="gate"><form class="gatecard" id="gform">
+<div style="font-size:30px;margin-bottom:8px">📊</div><h1>블로그 통계 관리</h1><p>접근하려면 비밀번호를 입력하세요</p>
+<input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" autofocus>
+<button type="submit">입장</button><div class="err" id="err"></div></form></div>
+<div id="dash"><div class="wrap">
+<div class="top"><h1>📊 블로그 통계</h1><span class="meta" id="asof"></span><span class="sp"></span>
+<button class="btn" id="refresh">새로고침</button><button class="btn" id="logout">나가기</button></div>
+<div class="cards">
+<div class="stat"><div class="lbl">오늘 조회수</div><div class="val" id="c-today">-</div></div>
+<div class="stat"><div class="lbl">누적 조회수</div><div class="val" id="c-total">-</div></div>
+<div class="stat"><div class="lbl">게시물 수</div><div class="val" id="c-posts">-</div></div></div>
+<div class="panel"><h2>일별 조회수 (최근 30일)</h2><div id="chart"></div></div>
+<div class="panel"><h2>게시물 조회수 순위</h2><table><thead><tr><th></th><th>제목</th><th style="text-align:right">조회수</th></tr></thead><tbody id="rank"></tbody></table></div>
+</div></div>
+<script>
+var TMAP=__TMAP__,NPOSTS=__NPOSTS__;
+function $(id){return document.getElementById(id)}
+function fmt(n){return (n||0).toLocaleString('ko-KR')}
+function esc(s){return (s+'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+function drawChart(days){
+ days=days.slice(-30);
+ if(!days.length){$('chart').innerHTML='<p style="color:var(--muted);font-size:13px">아직 데이터가 없습니다.</p>';return}
+ var W=880,H=200,pad=28,ih=H-pad*2,iw=W-pad*2,base=pad+ih;
+ var max=Math.max.apply(null,days.map(function(d){return d.count}));if(max<1)max=1;
+ var n=days.length;
+ var pts=days.map(function(d,i){var x=pad+(n<=1?iw/2:iw*i/(n-1));var y=pad+ih-(d.count/max)*ih;return [x,y,d]});
+ var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1)}).join(' ');
+ var area='M '+pad+' '+base+' L '+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' L ')+' L '+pts[n-1][0].toFixed(1)+' '+base+' Z';
+ var dots=pts.map(function(p){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.5" fill="var(--accent)"/>'}).join('');
+ function lbl(p){return '<text x="'+p[0].toFixed(1)+'" y="'+(H-6)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+p[2].date.slice(5)+'</text>'}
+ var labels=[lbl(pts[0])];if(n>2)labels.push(lbl(pts[Math.floor(n/2)]));if(n>1)labels.push(lbl(pts[n-1]));
+ $('chart').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:100%;height:auto">'+
+  '<path d="'+area+'" fill="var(--accent-soft)" opacity=".55"/>'+
+  '<polyline points="'+poly+'" fill="none" stroke="var(--accent)" stroke-width="2"/>'+dots+labels.join('')+'</svg>';
+}
+function render(d){
+ $('c-today').innerHTML=fmt(d.today);$('c-total').innerHTML=fmt(d.total);$('c-posts').innerHTML=fmt(NPOSTS);
+ $('asof').textContent=(d.date||'')+' 기준 (KST)';drawChart(d.days||[]);
+ var max=(d.posts[0]&&d.posts[0].count)||1;
+ var rows=(d.posts||[]).slice(0,40).map(function(p,i){var t=TMAP[p.path]||p.path;var w=Math.round(p.count/max*100);
+  return '<tr><td class="rank">'+(i+1)+'</td><td><a href="'+esc(p.path)+'" target="_blank">'+esc(t)+'</a><div class="bar"><span style="width:'+w+'%"></span></div></td><td class="n">'+fmt(p.count)+'</td></tr>'}).join('');
+ $('rank').innerHTML=rows||'<tr><td colspan="3" style="color:var(--muted)">아직 조회 데이터가 없습니다.</td></tr>';
+ $('gate').style.display='none';$('dash').style.display='block';
+}
+function load(pw){return fetch('/api/stats?pw='+encodeURIComponent(pw)).then(function(r){if(r.status!==200)throw new Error('bad');return r.json()}).then(function(d){sessionStorage.setItem('bpw',pw);render(d)})}
+$('gform').addEventListener('submit',function(e){e.preventDefault();$('err').textContent='';load($('pw').value).catch(function(){$('err').textContent='비밀번호가 올바르지 않습니다.'})});
+$('refresh').addEventListener('click',function(){var pw=sessionStorage.getItem('bpw');if(pw)load(pw)});
+$('logout').addEventListener('click',function(){sessionStorage.removeItem('bpw');location.reload()});
+(function(){var pw=sessionStorage.getItem('bpw');if(pw)load(pw).catch(function(){sessionStorage.removeItem('bpw')})})();
+</script></body></html>"""
+ADMIN=ADMIN.replace('__TMAP__',json.dumps(_tmap,ensure_ascii=False)).replace('__NPOSTS__',str(len(arts)))
+os.makedirs(f"{OUT}/admin",exist_ok=True)
+open(f"{OUT}/admin/index.html",'w',encoding='utf-8').write(ADMIN)
+print("admin dashboard 생성")
 
 print("TOTAL articles:",len(arts))
 EOF=1
