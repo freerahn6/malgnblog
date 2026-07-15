@@ -11,6 +11,7 @@ _preview/            블로그 디자인 시안 (정적 HTML)
 articles/            SEO 아티클 원고 (마크다운 + front matter)
 00_전략기획서.md ~ 05_검수리포트.md   기획·전략·검수 산출물
 _brief.md / _facts.md / _taxonomy.md / _writing-guide.md   공용 기준 문서
+_product-lms.md / _product-wecandeo.md   제품 지식 시트(맑은이러닝 LMS·위캔디오) — 집필 시 제품 기능·사양 인용의 단일 출처
 ```
 
 ## 확정 방향

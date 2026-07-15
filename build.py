@@ -235,6 +235,7 @@ _org={"@context":"https://schema.org","@type":"Organization","name":"맑은소�
 _web={"@context":"https://schema.org","@type":"WebSite","name":"맑은소프트 블로그","url":SITE,"inLanguage":"ko-KR","publisher":{"@type":"Organization","name":"맑은소프트"}}
 HOME_LD=''.join(f'<script type="application/ld+json">{json.dumps(x,ensure_ascii=False)}</script>' for x in (_org,_web))
 home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+ '<meta name="naver-site-verification" content="78d05abce6d558d7e4414c1b56bee9ca2d6cfdda">'
  '<meta name="viewport" content="width=device-width,initial-scale=1">'
  '<meta name="description" content="교육을 운영하는 사람을 위한 LMS 실전 지식. 기업교육·HRD 담당자를 위한 이러닝·자격검정·에듀테크 인사이트.">'
  '<meta property="og:type" content="website"><meta property="og:title" content="맑은소프트 블로그"><meta property="og:url" content="'+SITE+'/"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif">'
