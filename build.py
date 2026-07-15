@@ -15,6 +15,7 @@ INQ="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu"
 SCRIPT=re.findall(r'<script>.*?</script>',art_html,re.S)[-1]
 COVERS=re.findall(r'class="cover-img"[^>]*src="(data:image/jpeg;base64,[^"]+)"',idx_html)
 IMG=json.load(open(_D+'/img_map.json',encoding='utf-8'))
+NAMECARDS=json.load(open(_D+'/namecards.json',encoding='utf-8'))
 BANL=open(_D+'/wecandeo_datauri.txt',encoding='utf-8').read().strip()
 BANR=open(_D+'/malgnsoft_datauri.txt',encoding='utf-8').read().strip()
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
@@ -30,21 +31,18 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  'aside.rail a:hover,aside.toc .side-banner:hover{transform:translateY(-3px)}'
  'aside.rail img{width:100%;height:auto;display:block}'
  '.byline .brole{color:var(--accent);font-weight:600;margin-left:6px;font-size:13px}'
- '.namecard{margin:50px 0 8px;display:flex;justify-content:center}'
- '.nc-badge{position:relative;width:100%;max-width:450px;background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--shadow)}'
- '.nc-badge::before{content:"";position:absolute;top:-45px;right:-45px;width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1ec8c8);opacity:.16}'
- '.nc-badge::after{content:"";position:absolute;bottom:-28px;left:-28px;width:88px;height:88px;border-radius:26px;background:#1ec8c8;opacity:.12;transform:rotate(18deg)}'
- '.nc-hdr{position:relative;display:flex;justify-content:flex-end;padding:15px 22px 0}'
- '.nc-logo{font-weight:800;font-size:13px;letter-spacing:.16em;color:var(--accent)}'
- '.nc-row{position:relative;display:flex;align-items:center;gap:18px;padding:12px 24px 8px}'
- '.nc-photo{width:76px;height:76px;border-radius:20px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:42px;line-height:1;flex:none;border:2px solid var(--surface);box-shadow:0 4px 14px rgba(20,30,50,.12)}'
- '.nc-txt{min-width:0}'
- '.nc-nm{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-0.02em;line-height:1.05;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}'
- '.nc-nm .nc-en{font-size:12px;font-weight:600;color:var(--faint);letter-spacing:.04em}'
- '.nc-rl{margin-top:6px;font-size:14px;font-weight:700;color:var(--accent);display:flex;align-items:baseline;gap:7px}'
- '.nc-rl .nc-en2{font-size:10.5px;font-weight:600;color:var(--faint);letter-spacing:.08em}'
- '.nc-tm{margin-top:7px;font-size:12.5px;color:var(--muted)}'
- '.nc-ft{position:relative;display:flex;justify-content:space-between;align-items:center;padding:11px 24px;margin-top:10px;border-top:1px solid var(--border);font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--faint);text-transform:uppercase;background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}'
+ '.namecard{margin:48px 0 6px;display:flex;justify-content:center}'
+ '.nc-img{width:100%;max-width:580px;height:auto;border-radius:14px;display:block;box-shadow:var(--shadow)}'
+ '.recentlist{margin:28px 0 8px}'
+ '.recentlist h2{font-size:18px;font-weight:800;letter-spacing:-0.02em;margin:0 0 8px;padding-bottom:11px;border-bottom:2px solid var(--border-strong)}'
+ '.recentlist ul{list-style:none;margin:0;padding:0}'
+ '.recentlist li{border-bottom:1px solid var(--border)}'
+ '.recentlist a{display:flex;align-items:center;gap:13px;padding:13px 4px;color:var(--text);text-decoration:none}'
+ '.recentlist a:hover .rl-title{color:var(--accent)}'
+ '.recentlist .rl-cat{flex:none;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:999px;min-width:82px;text-align:center}'
+ '.recentlist .rl-title{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+ '.recentlist .rl-date{flex:none;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}'
+ '@media (max-width:560px){.recentlist .rl-cat{display:none}.recentlist .rl-title{white-space:normal}}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}')
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
@@ -140,6 +138,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <div class="hero-img"><img src="{hero}" alt="{title}"></div>
 <article>{body}</article>
 {namecard}
+{recentlist}
 </main>{banr}</div>
 <footer class="site"><div class="wrap"><span class="plate"><img src="{logo}" alt="맑은소프트"></span><span>맑은소프트 블로그 · (주)맑은소프트</span><span style="margin-left:auto">© 맑은소프트</span></div></footer>
 {fab}
@@ -156,18 +155,16 @@ for a in arts:
     toc_html=''.join(_ti)
     hero=IMG.get(a['slug'],COVERS[1])
     aname,arole,aroleEn,aen,aemoji=author_of(a)
-    namecard=(f'<div class="namecard"><div class="nc-badge">'
-        f'<div class="nc-hdr"><span class="nc-logo">MALGNSOFT</span></div>'
-        f'<div class="nc-row"><div class="nc-photo">{aemoji}</div>'
-        f'<div class="nc-txt"><div class="nc-nm">{H.escape(aname)}<span class="nc-en">{aen}</span></div>'
-        f'<div class="nc-rl">{arole}<span class="nc-en2">{aroleEn}</span></div>'
-        f'<div class="nc-tm">맑은소프트 블로그 전담팀</div></div></div>'
-        f'<div class="nc-ft"><span>이 글을 쓴 사람</span><span>malgnsoft.com</span></div></div></div>')
+    _badge=NAMECARDS.get(aname)
+    namecard=(f'<div class="namecard"><img class="nc-img" loading="lazy" src="{_badge}" alt="{H.escape(aname)} {arole} - 맑은소프트 블로그 전담팀"></div>') if _badge else ''
+    _recent=[x for x in sorted(arts,key=lambda y:y.get('date',''),reverse=True) if x['slug']!=a['slug']][:10]
+    _ritems=''.join(f'<li><a href="/{x["category"]}/{x["slug"]}/"><span class="rl-cat">{CATL[x["category"]]}</span><span class="rl-title">{H.escape(x["title"])}</span><span class="rl-date">{x.get("date","").replace("-",".")}</span></a></li>' for x in _recent)
+    recentlist=f'<section class="recentlist"><h2>최신 글</h2><ul>{_ritems}</ul></section>'
     _url=f"{SITE}/{a['category']}/{a['slug']}/"
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
-        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,jsonld=jsonld(a,_url))
+        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url))
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
     print("page:",a['category'],a['slug'],len(page)//1024,"KB toc",len(toc))
