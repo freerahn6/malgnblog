@@ -128,6 +128,7 @@ def jsonld(a,url):
 PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title} — 맑은소프트 블로그</title><meta name="description" content="{desc}">
 <link rel="canonical" href="https://blog.malgnsoft.com/{cat}/{slug}/">
+<link rel="alternate" type="application/rss+xml" title="맑은소프트 블로그 RSS" href="https://blog.malgnsoft.com/rss.xml">
 <meta property="og:type" content="article"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="https://blog.malgnsoft.com/{cat}/{slug}/"><meta property="og:site_name" content="맑은소프트 블로그"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif"><meta property="article:published_time" content="{date}"><meta name="twitter:card" content="summary_large_image">
 {jsonld}
 <style>{css}{extra}</style></head><body>
@@ -239,7 +240,8 @@ home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
  '<meta name="viewport" content="width=device-width,initial-scale=1">'
  '<meta name="description" content="교육을 운영하는 사람을 위한 LMS 실전 지식. 기업교육·HRD 담당자를 위한 이러닝·자격검정·에듀테크 인사이트.">'
  '<meta property="og:type" content="website"><meta property="og:title" content="맑은소프트 블로그"><meta property="og:url" content="'+SITE+'/"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif">'
- '<link rel="canonical" href="https://blog.malgnsoft.com/">'+HOME_LD)
+ '<link rel="canonical" href="https://blog.malgnsoft.com/">'
+ '<link rel="alternate" type="application/rss+xml" title="맑은소프트 블로그 RSS" href="https://blog.malgnsoft.com/rss.xml">'+HOME_LD)
 home=head+featured_html+'\n\n  <div class="grid">\n'+cards+'\n  </div>\n'+tail
 home=home.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
 home=home_prefix+home+'</body></html>'
@@ -284,10 +286,34 @@ for loc,mod,freq in entries:
     sm.append(f'  <url><loc>{loc}</loc><lastmod>{mod}</lastmod><changefreq>{freq}</changefreq></url>')
 sm.append('</urlset>')
 open(f"{OUT}/sitemap.xml",'w',encoding='utf-8').write('\n'.join(sm)+'\n')
-_ai_bots=['GPTBot','OAI-SearchBot','ChatGPT-User','PerplexityBot','ClaudeBot','Claude-Web','Google-Extended','CCBot','Bingbot','Applebot-Extended']
+_ai_bots=['Yeti','Daum','GPTBot','OAI-SearchBot','ChatGPT-User','PerplexityBot','ClaudeBot','Claude-Web','Google-Extended','CCBot','Bingbot','Applebot-Extended']
 _robots="User-agent: *\nAllow: /\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
 open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(_robots)
 print("sitemap.xml:",len(entries),"urls | robots.txt")
+
+# ---- RSS 피드 (네이버 웹마스터도구·구독기용) ----
+import datetime as _dt
+_WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; _MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+def _rfc822(d):
+    try:
+        y,m,day=map(int,d.split('-')); dt=_dt.date(y,m,day)
+        return f"{_WD[dt.weekday()]}, {day:02d} {_MO[m-1]} {y} 09:00:00 +0900"
+    except Exception: return "Mon, 01 Jan 2026 09:00:00 +0900"
+_rss_items=''
+for a in sorted(arts,key=lambda x:x.get('date',''),reverse=True):
+    _u=f"{SITE}/{a['category']}/{a['slug']}/"
+    _rss_items+=(f'<item><title>{H.escape(a["title"])}</title><link>{_u}</link>'
+        f'<description>{H.escape(a.get("description",""))}</description>'
+        f'<author>{H.escape(a.get("author","맑은소프트"))}</author><category>{CATL[a["category"]]}</category>'
+        f'<pubDate>{_rfc822(a.get("date",""))}</pubDate><guid isPermaLink="true">{_u}</guid></item>')
+_rss=('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>'
+    f'<title>맑은소프트 블로그</title><link>{SITE}/</link>'
+    '<description>교육을 운영하는 사람을 위한 LMS 실전 지식 — 기업교육·HRD·이러닝·자격검정·에듀테크</description>'
+    f'<language>ko-KR</language><lastBuildDate>{_rfc822(gmax)}</lastBuildDate>'
+    f'<atom:link href="{SITE}/rss.xml" rel="self" type="application/rss+xml"/>'
+    f'{_rss_items}</channel></rss>')
+open(f"{OUT}/rss.xml",'w',encoding='utf-8').write(_rss)
+print("rss.xml:",len(arts),"items")
 
 print("TOTAL articles:",len(arts))
 EOF=1
