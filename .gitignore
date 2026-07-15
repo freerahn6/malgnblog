@@ -21,3 +21,4 @@ _deploy/public/
 _deploy/site.zip
 _deploy/resp.json
 temp/
+.netlify/
