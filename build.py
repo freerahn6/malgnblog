@@ -23,6 +23,9 @@ BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank
 BAN_RIGHT=f'<aside class="rail"><a href="https://www.malgnsoft.com" target="_blank" rel="noopener"><img src="{BANR}" alt="맑은소프트"></a></aside>'
 EXTRA_CSS=('.wrap{max-width:1320px}'
  '.article-shell{grid-template-columns:176px minmax(0,1fr) 176px;gap:44px}'
+ '.doc{min-width:0;overflow:hidden}'
+ '.doc figure img,.doc article img{max-width:100%!important;height:auto;display:block;border:1px solid var(--border);border-radius:12px}'
+ '.doc figure{max-width:100%}'
  '.rail-left{position:sticky;top:88px;align-self:start}'
  '.rail-left .side-banner{display:block;width:160px;margin:0 auto;border-radius:12px;overflow:hidden;line-height:0;box-shadow:var(--shadow);transition:transform .18s}'
  '.rail-left .side-banner:hover{transform:translateY(-3px)}'
@@ -87,8 +90,14 @@ for fn in os.listdir(ART):
 arts.sort(key=lambda a:a.get('date',''))
 bysl={a['slug']:a for a in arts}
 
+def _collapse_blanks(m): return re.sub(r'\n[ \t]*\n+','\n',m.group(0))
+def prep_html_blocks(body):
+    # SVG/figure/table 등 원시 HTML 블록 안의 빈 줄 제거 → 마크다운이 블록을 쪼개 escape하는 것 방지
+    for tag in ('figure','svg','table'):
+        body=re.sub(rf'<{tag}\b.*?</{tag}>', _collapse_blanks, body, flags=re.S)
+    return body
 def md2html(body):
-    h=markdown.markdown(body,extensions=['fenced_code','sane_lists','attr_list','md_in_html'])
+    h=markdown.markdown(prep_html_blocks(body),extensions=['fenced_code','sane_lists','attr_list','md_in_html'])
     # add ids to h2 + collect toc
     toc=[]; i=[0]
     def repl(m):
