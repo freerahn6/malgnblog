@@ -213,7 +213,7 @@ head=head.replace('<main class="wrap">','<div class="wrap home-shell"><aside cla
 tail=tail.replace('</main>','</main>'+BAN_RIGHT+'</div>',1)
 def excerpt(s,n=88):
     s=s.strip(); return s if len(s)<=n else s[:n].rsplit(' ',1)[0]+'…'
-feat=bysl['lms-selection-guide-for-corporate-training']
+feat=sorted(arts,key=lambda x:x.get('date',''),reverse=True)[0]  # 최신글 자동 헤드라인
 def card_cover(a,extra=''):
     return (f'<div class="cover"><img class="cover-img" loading="lazy" '
             f'src="{IMG.get(a["slug"],COVERS[1])}" alt="{H.escape(a["title"])}"><span class="scrim"></span>'
