@@ -16,6 +16,7 @@ SCRIPT=re.findall(r'<script>.*?</script>',art_html,re.S)[-1]
 COVERS=re.findall(r'class="cover-img"[^>]*src="(data:image/jpeg;base64,[^"]+)"',idx_html)
 IMG=json.load(open(_D+'/img_map.json',encoding='utf-8'))
 NAMECARDS=json.load(open(_D+'/namecards.json',encoding='utf-8'))
+FIGMAP=json.load(open(_D+'/figmap.json',encoding='utf-8'))
 BANL=open(_D+'/wecandeo_datauri.txt',encoding='utf-8').read().strip()
 BANR=open(_D+'/malgnsoft_datauri.txt',encoding='utf-8').read().strip()
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
@@ -148,6 +149,9 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 for a in arts:
     body_html,toc=md2html(a['body'])
     body_html=body_html.replace('href="/contact/"',f'href="{INQ}" target="_blank" rel="noopener"')
+    if a['slug'] in FIGMAP:
+        body_html=re.sub(r'(<img[^>]*\ssrc=")(?:\./images/[^"]+|/assets/img/[^"]+)("[^>]*>)',
+                         lambda m:m.group(1)+FIGMAP[a['slug']]+m.group(2), body_html, count=1)
     _ti=[]
     for k,(sid,txt) in enumerate(toc):
         cls=' class="on"' if k==0 else ''
