@@ -20,5 +20,13 @@ _product-lms.md / _product-wecandeo.md   제품 지식 시트(맑은이러닝 LM
 - 콘텐츠 배합: 정보(TOFU) 50 / 실무(MOFU) 35 / 제품·홍보(BOFU) 15
 - 편집 원칙: 운영자 렌즈 + 교육 게이트 (상세 `_writing-guide.md`)
 
+## 문서 지도
+필요한 것만 골라 읽는다.
+- `STATUS.md` — **진행 현황 단일 소스** (세션 시작 시 여기부터)
+- `CLAUDE.md` — 프로젝트 규칙(빌드/배포·SSOT·콘텐츠 규칙)
+- `_facts.md` — 팩트 SSOT / `_product-lms.md`·`_product-wecandeo.md` — 제품 인용 단일출처
+- `_writing-guide.md` — 집필 10원칙 / `_brief.md`·`_taxonomy.md` — 기획 기준
+- `00_전략기획서.md`~`07_SEO_오프페이지제안.md` — 전략·SEO·검수 산출물
+
 ## 현재 상태
-디자인 시안(홈·상세) 확정 단계, 콘텐츠 파일럿 6편 작성 완료, 3개월 캘린더 24편 중 나머지 집필 예정.
+→ `STATUS.md` 참조(진행 현황 단일 소스). README는 현황을 단정하지 않는다.
