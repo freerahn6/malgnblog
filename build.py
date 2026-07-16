@@ -51,6 +51,14 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}')
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
+# 상단 메뉴 단일 출처: (키, 라벨, URL). 키는 활성표시 판별용(카테고리는 CATL 키와 일치)
+NAV_ITEMS=[('home','홈','/'),('all','전체보기','/all/'),('lms','LMS·이러닝','/lms/'),('hrd','기업교육·HRD','/hrd/'),('certification','자격검정','/certification/'),('video','동영상·콘텐츠','/video/'),('edutech','에듀테크','/edutech/')]
+def navhtml(active=''):
+    out=[]
+    for k,lab,u in NAV_ITEMS:
+        cls=' class="active"' if k==active else ''
+        out.append(f'<a href="{u}"{cls}>{lab}</a>')
+    return '<nav class="main">'+''.join(out)+'</nav>'
 AUTHORS={'안기범':('팀장','TEAM LEAD','AN GI-BEOM','👨‍💼'),'강이슬':('과장','MANAGER','KANG I-SEUL','👩‍💼'),'이채영':('대리','ASSISTANT MANAGER','LEE CHAE-YEONG','👩‍💻'),'한다현':('대리','ASSISTANT MANAGER','HAN DA-HYEON','👩‍🏫')}
 def author_of(a):
     n=a.get('author','교육운영 노트'); r,re_,en,em=AUTHORS.get(n,('','','','✍️')); return n,r,re_,en,em
@@ -136,7 +144,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <div class="progress" id="progress"></div>
 <header class="site"><div class="wrap">
 <a class="brand" href="/"><span class="plate"><img src="{logo}" alt="맑은소프트"></span></a>
-<nav class="main"><a href="/">전체</a><a href="/lms/">LMS·이러닝</a><a href="/hrd/">기업교육·HRD</a><a href="/certification/">자격검정</a><a href="/video/">동영상·콘텐츠</a><a href="/edutech/">에듀테크</a></nav>
+{nav}
 <a href="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu" target="_blank" rel="noopener" class="cta-btn">도입 문의</a>
 </div></header>
 <div class="wrap article-shell">
@@ -180,7 +188,7 @@ for a in arts:
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
-        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK)
+        aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK,nav=navhtml(a['category']))
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
     print("page:",a['category'],a['slug'],len(page)//1024,"KB toc",len(toc))
@@ -191,7 +199,8 @@ tail=idx_html[idx_html.find('</main>'):]
 # fix head: remove preview banner, home links
 head=re.sub(r'<div class="banner">.*?</div>\s*','',head,count=1,flags=re.S)
 head=head.replace('<a class="brand" href="#">','<a class="brand" href="/">',1)
-head=head.replace('<a href="#" class="active">전체</a>','<a href="/" class="active">전체</a>',1)
+# 깨진 상단 메뉴(href="#") 전체를 자리표시자로 치환 → 각 페이지가 활성상태 지정해 채운다
+head=re.sub(r'<nav class="main">.*?</nav>','__NAV__',head,count=1,flags=re.S)
 head=head.replace('<a href="#" class="cta-btn">도입 문의</a>','<a href="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu" target="_blank" rel="noopener" class="cta-btn">도입 문의</a>',1)
 head=head.replace('<title>교육운영 노트 by 맑은소프트 — 블로그 디자인 시안</title>','<title>맑은소프트 블로그 — 교육을 운영하는 사람을 위한 LMS 실전 지식</title>',1)
 HOME_EXTRA=('.wrap{max-width:1320px}'
@@ -211,6 +220,20 @@ HOME_EXTRA=('.wrap{max-width:1320px}'
  '@media (max-width:1000px){.home-shell{grid-template-columns:1fr}.rail-left,.home-shell .rail{display:none}}'
  '@media (max-width:900px){.home-shell .grid{grid-template-columns:repeat(2,1fr)}}'
  '@media (max-width:560px){.home-shell .grid{grid-template-columns:1fr}}')
+ALL_LIST_CSS=('.alllist{margin:8px 0}'
+ '.alllist ul{list-style:none;margin:0;padding:0;border-top:2px solid var(--border-strong)}'
+ '.alllist li{border-bottom:1px solid var(--border)}'
+ '.alllist a{display:flex;align-items:baseline;gap:16px;padding:16px 6px;color:var(--text);text-decoration:none}'
+ '.alllist a:hover .al-title{color:var(--accent)}'
+ '.alllist .al-title{flex:1;min-width:0;font-size:16px;font-weight:600;letter-spacing:-.01em}'
+ '.alllist .al-author{flex:none;font-size:13px;color:var(--muted)}'
+ '.alllist .al-date{flex:none;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:92px;text-align:right}'
+ '.pager{display:flex;justify-content:center;align-items:center;gap:8px;margin:36px 0 8px;flex-wrap:wrap}'
+ '.pager a,.pager span{min-width:40px;text-align:center;padding:9px 13px;border:1px solid var(--border);border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;color:var(--text)}'
+ '.pager a:hover{border-color:var(--accent);color:var(--accent)}'
+ '.pager .cur{background:var(--accent);color:#fff;border-color:var(--accent)}'
+ '.pager .disabled{opacity:.4;pointer-events:none}'
+ '@media(max-width:560px){.alllist .al-author{display:none}.alllist .al-date{min-width:74px}.alllist a{gap:10px}}')
 head=head.replace('<main class="wrap">','<div class="wrap home-shell"><aside class="rail-left">'+BAN_LEFT+'</aside><main class="home-main">',1)
 tail=tail.replace('</main>','</main>'+BAN_RIGHT+'</div>',1)
 def excerpt(s,n=88):
@@ -247,6 +270,7 @@ home_prefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
  '<link rel="alternate" type="application/rss+xml" title="맑은소프트 블로그 RSS" href="https://blog.malgnsoft.com/rss.xml">'+HOME_LD)
 home=head+featured_html+'\n\n  <div class="grid">\n'+cards+'\n  </div>\n'+tail
 home=home.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
+home=home.replace('__NAV__',navhtml('home'),1)
 home=home_prefix+home+TRACK+'</body></html>'
 os.makedirs(OUT,exist_ok=True)
 open(f"{OUT}/index.html",'w',encoding='utf-8').write(home)
@@ -271,6 +295,7 @@ for cat in CATL:
         .replace('<title>맑은소프트 블로그 — 교육을 운영하는 사람을 위한 LMS 실전 지식</title>',f'<title>{CATL[cat]} — 맑은소프트 블로그</title>',1))
     cpage=chead+'  <div class="grid">\n'+ccards+'\n  </div>\n'+tail
     cpage=cpage.replace('</style>',HOME_EXTRA+'</style></head><body>',1)
+    cpage=cpage.replace('__NAV__',navhtml(cat),1)
     cprefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
      '<meta name="viewport" content="width=device-width,initial-scale=1">'
      f'<meta name="description" content="{CATDESC[cat]}"><link rel="canonical" href="{SITE}/{cat}/">')
@@ -279,9 +304,52 @@ for cat in CATL:
     open(f"{OUT}/{cat}/index.html",'w',encoding='utf-8').write(cpage)
 print("CATEGORY pages:",made_cats)
 
+# ---- 전체보기 (리스트 + 페이징) ----
+PER=20
+all_sorted=sorted(arts,key=lambda x:x.get('date',''),reverse=True)
+npages=max(1,(len(all_sorted)+PER-1)//PER)
+def all_url(p): return "/all/" if p==1 else f"/all/page/{p}/"
+made_all=[]
+for p in range(1,npages+1):
+    chunk=all_sorted[(p-1)*PER:p*PER]
+    items=''.join(
+        f'<li><a href="/{x["category"]}/{x["slug"]}/">'
+        f'<span class="al-title">{H.escape(x["title"])}</span>'
+        f'<span class="al-author">{H.escape(author_of(x)[0])}</span>'
+        f'<span class="al-date">{x.get("date","").replace("-",".")}</span></a></li>' for x in chunk)
+    if npages>1:
+        pg=['<nav class="pager" aria-label="페이지 이동">']
+        pg.append(f'<a href="{all_url(p-1)}" rel="prev">이전</a>' if p>1 else '<span class="disabled">이전</span>')
+        for q in range(1,npages+1):
+            pg.append(f'<span class="cur" aria-current="page">{q}</span>' if q==p else f'<a href="{all_url(q)}">{q}</a>')
+        pg.append(f'<a href="{all_url(p+1)}" rel="next">다음</a>' if p<npages else '<span class="disabled">다음</span>')
+        pg.append('</nav>'); pager=''.join(pg)
+    else:
+        pager=''
+    _sub=f'발행한 모든 글을 최신순으로 모았습니다 · 총 {len(all_sorted)}편'
+    ahead=(head.replace('<h1>맑은소프트 블로그</h1>','<h1>전체보기</h1>',1)
+        .replace('<p>국내 1위 LMS 맑은소프트에서 전하는 소식과 인사이트</p>',f'<p>{_sub}</p>',1)
+        .replace('<title>맑은소프트 블로그 — 교육을 운영하는 사람을 위한 LMS 실전 지식</title>',
+                 f'<title>전체보기{(" · "+str(p)+"페이지") if p>1 else ""} — 맑은소프트 블로그</title>',1)
+        .replace('__NAV__',navhtml('all'),1))
+    apage=ahead+f'<section class="alllist"><ul>{items}</ul>{pager}</section>\n'+tail
+    apage=apage.replace('</style>',HOME_EXTRA+ALL_LIST_CSS+'</style></head><body>',1)
+    aprefix=('<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+     '<meta name="viewport" content="width=device-width,initial-scale=1">'
+     '<meta name="description" content="맑은소프트 블로그 전체 글 목록 — 최신순으로 모아봅니다.">'
+     f'<link rel="canonical" href="{SITE}{all_url(p)}">'
+     +('<meta name="robots" content="noindex,follow">' if p>1 else ''))
+    apage=aprefix+apage+TRACK+'</body></html>'
+    outd=OUT+all_url(p).rstrip('/')
+    os.makedirs(outd,exist_ok=True)
+    open(f"{outd}/index.html",'w',encoding='utf-8').write(apage)
+    made_all.append(all_url(p))
+print("ALL pages:",made_all)
+
 # ---- sitemap.xml + robots.txt ----
 gmax=max((a.get('date','') for a in arts), default='2026-07-14')
 entries=[(SITE+"/",gmax,"daily")]
+entries+=[(SITE+u,gmax,"weekly") for u in made_all]
 entries+=[(f"{SITE}/{c}/",gmax,"weekly") for c in made_cats]
 entries+=[(f"{SITE}/{a['category']}/{a['slug']}/",a.get('date',gmax),"monthly") for a in arts]
 sm=['<?xml version="1.0" encoding="UTF-8"?>','<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
