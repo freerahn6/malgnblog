@@ -1,0 +1,91 @@
+name: 배포 브랜치 갱신
+
+# main에 push되면 GitHub이 빌드해서 그 결과물(정적 HTML)만 deploy 브랜치에 올린다.
+# 웹서버는 deploy 브랜치를 git으로 당겨가기만 하면 된다 — 서버에 빌드 환경이 필요 없다.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.gitattributes'
+      - 'deploy/**'
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write        # deploy 브랜치에 커밋하기 위해 필요
+
+concurrency:
+  group: deploy-branch   # 연달아 push해도 마지막 것만 반영된다
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: 의존성 설치
+        run: pip install -q -r requirements.txt
+
+      - name: 빌드
+        run: python build.py
+
+      # 조용히 실패한 빌드를 서버로 내보내지 않는다.
+      # 여기서 멈추면 deploy 브랜치가 그대로라 서버의 현재 사이트도 그대로 유지된다.
+      - name: 건전성 검사
+        id: check
+        run: |
+          OUT=_deploy/public
+          [ -s "$OUT/index.html" ] || { echo "::error::index.html이 없거나 비어 있음"; exit 1; }
+          [ -s "$OUT/sitemap.xml" ] || { echo "::error::sitemap.xml 누락"; exit 1; }
+          PAGES=$(find "$OUT" -name index.html | wc -l)
+          [ "$PAGES" -ge 20 ] || { echo "::error::페이지 $PAGES 개로 비정상(최소 20)"; exit 1; }
+          echo "pages=$PAGES" >> $GITHUB_OUTPUT
+
+      - name: deploy 브랜치 갱신
+        id: push
+        run: |
+          URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          # 기존 deploy 브랜치를 얕게 받아온다. 없으면(최초 실행) 새로 만든다.
+          if ! git clone -q --branch deploy --single-branch --depth 1 "$URL" ../site 2>/dev/null; then
+            echo "deploy 브랜치가 없어 새로 생성합니다"
+            mkdir -p ../site && cd ../site && git init -q -b deploy && git remote add origin "$URL"
+            cd "$GITHUB_WORKSPACE"
+          fi
+
+          # 빌드 결과로 통째 갈아끼운다(--delete: 삭제된 글의 옛 페이지가 남지 않는다)
+          rsync -a --delete --exclude .git _deploy/public/ ../site/
+
+          cd ../site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 배포 생략"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          git commit -qm "build: ${GITHUB_SHA::7} (${{ steps.check.outputs.pages }} pages)"
+          git push -q origin deploy
+          echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: 결과 요약
+        run: |
+          {
+            echo "### ✅ 빌드 완료 — \`${GITHUB_SHA::7}\`"
+            echo ""
+            echo "- 페이지: ${{ steps.check.outputs.pages }} 개"
+            if [ "${{ steps.push.outputs.changed }}" = "true" ]; then
+              echo "- \`deploy\` 브랜치 갱신됨 → 웹서버가 **최대 2분 안에** 반영합니다."
+            else
+              echo "- 결과물에 변화가 없어 배포하지 않았습니다."
+            fi
+          } >> $GITHUB_STEP_SUMMARY

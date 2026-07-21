@@ -1,0 +1,76 @@
+name: 배포용 묶음 생성
+
+# 예비용 — 수동 실행 전용.
+# 평소 배포는 deploy.yml(서버가 deploy 브랜치를 당겨감)이 담당한다.
+# 서버 자동 갱신이 막히거나 담당자에게 파일을 직접 전달해야 할 때 Actions 탭에서 실행한다.
+on:
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: 의존성 설치
+        run: pip install -q -r requirements.txt
+
+      - name: 빌드
+        run: python build.py
+
+      # 깨진 빌드를 담당자에게 넘기지 않는다
+      - name: 건전성 검사
+        id: check
+        run: |
+          OUT=_deploy/public
+          [ -s "$OUT/index.html" ] || { echo "::error::index.html이 없거나 비어 있음"; exit 1; }
+          [ -s "$OUT/sitemap.xml" ] || { echo "::error::sitemap.xml 누락"; exit 1; }
+          PAGES=$(find "$OUT" -name index.html | wc -l)
+          [ "$PAGES" -ge 20 ] || { echo "::error::페이지 $PAGES 개로 비정상(최소 20)"; exit 1; }
+          echo "pages=$PAGES" >> $GITHUB_OUTPUT
+          echo "size=$(du -sh $OUT | cut -f1)" >> $GITHUB_OUTPUT
+
+      # 담당자가 서버에서 그대로 풀 수 있도록 파일 목록도 같이 넣는다
+      - name: 전달 안내문 동봉
+        run: |
+          cat > _deploy/public/_배포안내.txt <<EOF
+          맑은소프트 블로그 정적 파일
+          ------------------------------------------------------------
+          생성 시각 : $(date '+%Y-%m-%d %H:%M:%S') UTC
+          커밋      : ${GITHUB_SHA}
+          페이지 수 : ${{ steps.check.outputs.pages }} 개
+
+          설치 방법
+            이 zip의 내용을 웹서버 문서 루트에 그대로 덮어씁니다.
+            (기존 파일을 지우고 새로 올리는 것을 권장합니다 —
+             삭제된 글의 옛 페이지가 남지 않습니다.)
+
+          주의
+            - 모든 페이지가 정적 HTML입니다. PHP·DB·런타임이 필요 없습니다.
+            - 이미지는 HTML 안에 포함되어 있어 별도 이미지 폴더가 없습니다.
+            - /api/track 요청이 발생합니다. 조회수 수집용이며 서버에 해당
+              기능이 없으면 404가 납니다. 페이지 동작에는 영향이 없습니다.
+              404 로그가 거슬리면 해당 경로를 204로 응답하도록 설정해주세요.
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blog-${{ github.sha }}
+          path: _deploy/public/
+          retention-days: 30
+
+      - name: 결과 요약
+        run: |
+          {
+            echo "### 📦 배포용 묶음 생성 완료"
+            echo ""
+            echo "- 커밋: \`${GITHUB_SHA::7}\`"
+            echo "- 페이지: ${{ steps.check.outputs.pages }} 개 / 용량: ${{ steps.check.outputs.size }}"
+            echo ""
+            echo "이 페이지 하단 **Artifacts** 에서 \`blog-${GITHUB_SHA}\` 를 내려받아 서버 담당자에게 전달하세요."
+          } >> $GITHUB_STEP_SUMMARY
