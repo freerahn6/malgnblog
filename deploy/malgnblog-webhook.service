@@ -1,0 +1,31 @@
+[Unit]
+Description=malgnblog GitHub webhook receiver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=blog
+Group=blog
+WorkingDirectory=/srv/malgnblog
+EnvironmentFile=/etc/malgnblog.env
+# 로그·빌드 출력에 한글이 섞인다. 서버 로케일이 ASCII여도 깨지지 않도록 고정한다.
+Environment=PYTHONIOENCODING=utf-8
+Environment=PYTHONUNBUFFERED=1
+Environment=LANG=C.UTF-8
+ExecStart=/usr/bin/python3 /srv/malgnblog/deploy/webhook.py
+Restart=always
+RestartSec=3
+
+# 하드닝 — 이 프로세스는 외부 입력을 받으므로 권한을 최소화한다
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/malgnblog
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
