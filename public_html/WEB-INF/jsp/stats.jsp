@@ -1,7 +1,7 @@
 <%@ page contentType="application/json; charset=UTF-8" session="false" trimDirectiveWhitespaces="true" %>
 <%@ include file="/WEB-INF/jsp/stats-store.jspf" %>
 <%--
-  GET /api/stats?pw=...        — /admin 대시보드가 읽는 집계 JSON
+  GET /api/stats?pw=...        — 관리자 대시보드(/gamma/)가 읽는 집계 JSON
   GET /api/stats?pw=...&reset=1 — 집계 초기화
 
   응답 형태는 기존 Netlify 함수와 동일하다(대시보드 코드를 고치지 않기 위해).

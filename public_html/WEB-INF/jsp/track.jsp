@@ -46,8 +46,8 @@
     ctx.log("[malgnblog] track: 집계 제외 경로 " + p.length() + "자");
     return;
   }
-  // /admin은 관리자 본인 조회라 집계하지 않는다(Netlify 구현과 동일)
-  if (p.startsWith("/admin")) return;
+  // 관리자 본인 조회는 집계하지 않는다. 경로는 build.py의 ADMIN_PATH와 같은 값이어야 한다.
+  if (p.startsWith("/gamma")) return;
 
   java.util.Map<String, Long> m = store(ctx);
   synchronized (m) {
