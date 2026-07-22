@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  맑은소프트 블로그 — Resin 웹앱 설정
+  웹루트(/home/blog/public_html)의 WEB-INF로 배포된다.
+
+  사이트 본문은 전부 정적 HTML이고, Resin이 맡는 것은 조회수 수집 2개뿐이다.
+    POST /api/track  → 조회수 +1 (본문 없음, 204)
+    GET  /api/stats  → /admin 대시보드용 집계 JSON (비밀번호 필요)
+
+  JSP 실물은 WEB-INF 아래 있어 직접 URL로 노출되지 않는다(서블릿 매핑으로만 접근).
+-->
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                             http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+
+  <display-name>malgnblog</display-name>
+
+  <!-- 집계 파일을 둘 디렉터리. 웹루트 밖이어야 한다(외부 노출·git reset 영향 차단).
+       Resin 실행 계정에 쓰기 권한이 있어야 한다. -->
+  <context-param>
+    <param-name>statsDir</param-name>
+    <param-value>/home/blog/data</param-value>
+  </context-param>
+
+  <!-- /admin 대시보드 비밀번호. statsDir/admin.pw 파일이 있으면 그 내용이 우선한다. -->
+  <context-param>
+    <param-name>adminPassword</param-name>
+    <param-value>gamma</param-value>
+  </context-param>
+
+  <servlet>
+    <servlet-name>track</servlet-name>
+    <jsp-file>/WEB-INF/jsp/track.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>track</servlet-name>
+    <url-pattern>/api/track</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>stats</servlet-name>
+    <jsp-file>/WEB-INF/jsp/stats.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>stats</servlet-name>
+    <url-pattern>/api/stats</url-pattern>
+  </servlet-mapping>
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+  </session-config>
+
+</web-app>
