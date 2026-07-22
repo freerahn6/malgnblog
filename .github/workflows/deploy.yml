@@ -75,6 +75,10 @@ jobs:
 
           # deploy 브랜치의 트리는 서버의 git 루트(/home/blog)와 같은 모양이다.
           # 즉 사이트는 public_html/ 아래에 담긴다 — 서버는 git reset만 하면 웹루트가 갱신된다.
+          #
+          # 최상위는 public_html/ 하나만 남긴다. 옛 평면 구조(루트에 index.html·lms/…)로 만들어진
+          # 브랜치를 이어받는 경우, 이걸 안 하면 그 잔재가 서버의 /home/blog 에 그대로 쏟아진다.
+          find ../site -mindepth 1 -maxdepth 1 ! -name .git ! -name public_html -exec rm -rf {} +
           mkdir -p ../site/public_html
           # 빌드 결과로 통째 갈아끼운다(--delete: 삭제된 글의 옛 페이지가 남지 않는다)
           rsync -a --delete --exclude .git _deploy/public/ ../site/public_html/
