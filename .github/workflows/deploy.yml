@@ -6,7 +6,9 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - '**.md'
+      # 주의: '**.md' 로 쓰면 articles/ 안의 원고까지 걸려 발행 push가 통째로 무시된다.
+      # '*.md' 는 최상위 문서(README·STATUS·CLAUDE·기획서)만 매칭한다.
+      - '*.md'
       - '.gitignore'
       - '.gitattributes'
       - 'deploy/**'
@@ -45,8 +47,18 @@ jobs:
           OUT=_deploy/public
           [ -s "$OUT/index.html" ] || { echo "::error::index.html이 없거나 비어 있음"; exit 1; }
           [ -s "$OUT/sitemap.xml" ] || { echo "::error::sitemap.xml 누락"; exit 1; }
+
+          # 글 수 대비로 검사한다. 고정 하한(20)만 보면 글이 통째로 빠져도 통과한다.
+          ARTS=$(find articles -name '*.md' | wc -l)
           PAGES=$(find "$OUT" -name index.html | wc -l)
-          [ "$PAGES" -ge 20 ] || { echo "::error::페이지 $PAGES 개로 비정상(최소 20)"; exit 1; }
+          [ "$PAGES" -ge "$ARTS" ] || { echo "::error::원고 $ARTS 편인데 페이지가 $PAGES 개뿐"; exit 1; }
+
+          # Resin 조회수 API. 이게 빠진 채 배포되면 rsync --delete가 서버의 WEB-INF를 지운다
+          # → /api/* 전멸. 그런데 사이트는 멀쩡해 보여서 알아채기 어렵다.
+          for f in WEB-INF/web.xml WEB-INF/jsp/track.jsp WEB-INF/jsp/stats.jsp WEB-INF/jsp/stats-store.jspf; do
+            [ -s "$OUT/$f" ] || { echo "::error::$f 누락 — 조회수 수집이 죽는다"; exit 1; }
+          done
+
           echo "pages=$PAGES" >> $GITHUB_OUTPUT
 
       - name: deploy 브랜치 갱신
@@ -61,8 +73,11 @@ jobs:
             cd "$GITHUB_WORKSPACE"
           fi
 
+          # deploy 브랜치의 트리는 서버의 git 루트(/home/blog)와 같은 모양이다.
+          # 즉 사이트는 public_html/ 아래에 담긴다 — 서버는 git reset만 하면 웹루트가 갱신된다.
+          mkdir -p ../site/public_html
           # 빌드 결과로 통째 갈아끼운다(--delete: 삭제된 글의 옛 페이지가 남지 않는다)
-          rsync -a --delete --exclude .git _deploy/public/ ../site/
+          rsync -a --delete --exclude .git _deploy/public/ ../site/public_html/
 
           cd ../site
           git config user.name "github-actions[bot]"

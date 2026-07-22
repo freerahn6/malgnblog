@@ -1,0 +1,38 @@
+<!--
+  blog.malgnsoft.com — Resin 4.0.67 웹앱 등록 예시
+
+  이미 운영 중인 resin.xml의 <cluster id="app"> 안, 다른 <host> 들과 나란히 넣습니다.
+  Resin이 맡는 것은 /api/track · /api/stats 두 개뿐이고, 나머지 정적 문서는 Apache가 직접 서빙합니다.
+  (그래서 이 웹앱에 트래픽이 거의 오지 않습니다 — JVM 부담은 사실상 없습니다)
+
+  중요
+    · root-directory 는 /home/blog, 웹앱 루트는 /home/blog/public_html 입니다.
+      웹앱 설정의 실체는 /home/blog/public_html/WEB-INF/web.xml 이며 배포 때 함께 갱신됩니다.
+    · Resin 실행 계정이 /home/blog/public_html 을 읽고 /home/blog/data 에 쓸 수 있어야 합니다.
+    · JSP 컴파일 산출물은 웹앱 안이 아니라 웹루트 밖에 두어야 합니다.
+      웹루트는 git이 통째로 갈아끼우는 자리라, 그 안에 작업 파일을 두면 배포 때 사라집니다.
+
+  기존 resin.xml에서 반드시 확인할 것 (이 파일만 넣어서는 안전해지지 않습니다)
+    ① <http .../> 리스너가 0.0.0.0 에 바인딩되어 있으면, 이 웹앱 루트가 곧 DocumentRoot이므로
+       http://<서버IP>:8080/ 으로 사이트가 통째로 다시 나갑니다. HTTPS 강제·캐시 정책이 전부 우회됩니다.
+       → address="127.0.0.1" 로 묶거나, 방화벽에서 해당 포트를 외부에 닫아주세요.
+    ② <javac> 의 source 레벨이 1.5 미만이면 조회수 JSP가 컴파일되지 않습니다(제네릭 사용).
+       Resin 4 기본값은 문제 없지만, 옛 설정을 물려받은 서버라면 확인이 필요합니다.
+-->
+<host id="blog.malgnsoft.com" root-directory="/home/blog">
+
+  <web-app id="/" root-directory="/home/blog/public_html">
+
+    <!-- 컴파일 산출물·임시파일은 웹루트 밖으로 -->
+    <temp-dir>/home/blog/data/resin-tmp</temp-dir>
+    <work-dir>/home/blog/data/resin-work</work-dir>
+
+    <!-- 배포(git reset)로 web.xml이 바뀌면 알아서 다시 올라옵니다 -->
+    <redeploy-mode>automatic</redeploy-mode>
+
+  </web-app>
+
+  <!-- 접근 로그는 Apache 쪽(blog.access.log)에 남습니다. 필요하면 여기서도 켜세요. -->
+  <!-- <access-log path="/home/blog/data/resin-access.log" rollover-period="1W"/> -->
+
+</host>

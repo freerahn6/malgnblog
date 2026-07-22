@@ -474,5 +474,17 @@ os.makedirs(f"{OUT}/admin",exist_ok=True)
 open(f"{OUT}/admin/index.html",'w',encoding='utf-8').write(ADMIN)
 print("admin dashboard 생성")
 
+# ---- Resin 웹앱(WEB-INF) 동봉 — 조회수 수집 /api/track·/api/stats ----
+# 정적 HTML과 함께 웹루트로 배포된다. Resin이 WEB-INF 아래를 직접 서빙하지는 않는다.
+# 조용히 건너뛰면 안 된다 — 빠진 채로 배포되면 서버의 WEB-INF가 지워져 /api/*가 죽는다.
+import shutil as _sh
+_srv=BASE+"/server/WEB-INF"
+if not os.path.isdir(_srv):
+    raise SystemExit(f"[중단] {_srv} 가 없습니다. 조회수 API(JSP)가 빠진 채로 배포되면 서버에서 지워집니다.")
+_dst=f"{OUT}/WEB-INF"
+if os.path.isdir(_dst): _sh.rmtree(_dst)
+_sh.copytree(_srv,_dst)
+print("WEB-INF 동봉: 조회수 API(JSP)")
+
 print("TOTAL articles:",len(arts))
 EOF=1

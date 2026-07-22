@@ -4,8 +4,13 @@
 
 ## 빌드 / 배포
 - 빌드: `pip install -r requirements.txt && python build.py` → 산출물 `_deploy/public`
-- 배포: **Netlify** (publish=`_deploy/public`, functions=`netlify/functions`, Python 3.11)
-- 조회수 집계는 Netlify Functions+Blobs(`/api/track`, `/admin`) — `_deploy/public` 밖 소스는 `netlify/`
+- 배포: **자체 웹서버** (Rocky Linux 9.5 / Apache 2.4.62 / Resin 4.0.67)
+  - `main` push → GitHub Actions 빌드 → `deploy` 브랜치(`public_html/` 아래) → 서버 cron이 2분마다 `git reset`
+  - 서버: git 루트 `/home/blog` · 웹루트 `/home/blog/public_html` · 데이터 `/home/blog/data`
+  - 설정·설치문서는 `deploy/` (`apache-blog.conf` · `resin-blog.xml` · 서버담당자-설치가이드)
+- 조회수 집계는 **Resin JSP** — 소스 `server/WEB-INF/`, 빌드가 웹루트 `WEB-INF/`로 복사.
+  `/api/track`(수집) · `/api/stats`(대시보드용 JSON) · 저장 `/home/blog/data/stats.tsv`
+- `netlify/`·`netlify.toml`·`.netlify/`는 **폐기된 옛 배포 잔재** — 참조·수정 금지
 
 ## 단일 출처(SSOT) — 충돌 시 이게 최우선
 - **사실·수치** = `_facts.md` (모든 글의 팩트 SSOT)
