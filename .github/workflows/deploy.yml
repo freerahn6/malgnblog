@@ -59,6 +59,16 @@ jobs:
             [ -s "$OUT/$f" ] || { echo "::error::$f 누락 — 조회수 수집이 죽는다"; exit 1; }
           done
 
+      # 미발행 slug로 걸린 내부링크를 잡는다(과거 6건 발생).
+      # 아직 정리 안 된 4건이 남아 있어 지금은 경고만 한다 —
+      # 그 4건이 해소되면 `|| true` 를 떼어 하드 게이트로 전환할 것.
+      - name: 내부링크 검사 (경고)
+        run: |
+          python tools/linkcheck.py || {
+            echo "::warning::깨진 내부링크가 있습니다. 위 목록을 확인하세요."
+            true
+          }
+
           echo "pages=$PAGES" >> $GITHUB_OUTPUT
 
       - name: deploy 브랜치 갱신
