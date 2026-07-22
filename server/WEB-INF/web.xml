@@ -5,7 +5,7 @@
 
   사이트 본문은 전부 정적 HTML이고, Resin이 맡는 것은 조회수 수집 2개뿐이다.
     POST /api/track  → 조회수 +1 (본문 없음, 204)
-    GET  /api/stats  → /admin 대시보드용 집계 JSON (비밀번호 필요)
+    GET  /api/stats  → 관리자 대시보드(/gamma/)용 집계 JSON (비밀번호 필요)
 
   JSP 실물은 WEB-INF 아래 있어 직접 URL로 노출되지 않는다(서블릿 매핑으로만 접근).
 -->
@@ -24,7 +24,7 @@
     <param-value>/home/blog/data</param-value>
   </context-param>
 
-  <!-- /admin 대시보드 비밀번호. statsDir/admin.pw 파일이 있으면 그 내용이 우선한다. -->
+  <!-- 관리자 대시보드 비밀번호. statsDir/admin.pw 파일이 있으면 그 내용이 우선한다. -->
   <context-param>
     <param-name>adminPassword</param-name>
     <param-value>gamma</param-value>

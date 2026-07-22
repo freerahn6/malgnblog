@@ -2,7 +2,10 @@
 import re, os, json, markdown, html as H
 BASE=os.path.dirname(os.path.abspath(__file__)); ART=BASE+"/articles"; PREV=BASE+"/_preview"; OUT=BASE+"/_deploy/public"; _D=BASE+"/_deploy"
 SITE="https://blog.malgnsoft.com"
-TRACK='<script>(function(){var p=location.pathname;if(p.indexOf("/admin")===0)return;try{fetch("/api/track?p="+encodeURIComponent(p),{method:"POST",keepalive:true})}catch(e){}})();</script>'
+# 관리자 통계 대시보드 경로. 바꾸려면 여기 한 곳만 고치고, server/WEB-INF/jsp/track.jsp의
+# 집계 제외 조건도 같은 값으로 맞춘다(그쪽은 서버에서 도는 코드라 이 상수를 못 읽는다).
+ADMIN_PATH="gamma"
+TRACK='<script>(function(){var p=location.pathname;if(p.indexOf("/'+ADMIN_PATH+'")===0)return;try{fetch("/api/track?p="+encodeURIComponent(p),{method:"POST",keepalive:true})}catch(e){}})();</script>'
 
 art_html=open(f"{PREV}/article.html",encoding='utf-8').read()
 idx_html=open(f"{PREV}/index.html",encoding='utf-8').read()
@@ -358,7 +361,9 @@ for loc,mod,freq in entries:
 sm.append('</urlset>')
 open(f"{OUT}/sitemap.xml",'w',encoding='utf-8').write('\n'.join(sm)+'\n')
 _ai_bots=['Yeti','Daum','GPTBot','OAI-SearchBot','ChatGPT-User','PerplexityBot','ClaudeBot','Claude-Web','Google-Extended','CCBot','Bingbot','Applebot-Extended']
-_robots="User-agent: *\nAllow: /\nDisallow: /admin\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
+# robots.txt에 관리자 경로를 적지 않는다 — Disallow는 누구나 읽으므로 경로를 광고하는 꼴이 된다.
+# 색인 차단은 대시보드 페이지의 <meta name="robots" content="noindex,nofollow"> 로 한다.
+_robots="User-agent: *\nAllow: /\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" for b in _ai_bots)+f"Sitemap: {SITE}/sitemap.xml\n"
 open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(_robots)
 print("sitemap.xml:",len(entries),"urls | robots.txt")
 
@@ -470,9 +475,9 @@ $('logout').addEventListener('click',function(){sessionStorage.removeItem('bpw')
 (function(){var pw=sessionStorage.getItem('bpw');if(pw)load(pw).catch(function(){sessionStorage.removeItem('bpw')})})();
 </script></body></html>"""
 ADMIN=ADMIN.replace('__TMAP__',json.dumps(_tmap,ensure_ascii=False)).replace('__NPOSTS__',str(len(arts)))
-os.makedirs(f"{OUT}/admin",exist_ok=True)
-open(f"{OUT}/admin/index.html",'w',encoding='utf-8').write(ADMIN)
-print("admin dashboard 생성")
+os.makedirs(f"{OUT}/{ADMIN_PATH}",exist_ok=True)
+open(f"{OUT}/{ADMIN_PATH}/index.html",'w',encoding='utf-8').write(ADMIN)
+print(f"admin dashboard 생성: /{ADMIN_PATH}/")
 
 # ---- Resin 웹앱(WEB-INF) 동봉 — 조회수 수집 /api/track·/api/stats ----
 # 정적 HTML과 함께 웹루트로 배포된다. Resin이 WEB-INF 아래를 직접 서빙하지는 않는다.
