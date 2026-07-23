@@ -5,6 +5,7 @@ category: video
 cluster: D
 slug: video-platform-build-lms-integration
 funnel: BOFU
+draft: true  # 2026-07-23 비공개: 위캔디오 OTT는 LMS 진도율 연동 불가 → 본문 수정 후 재공개 예정
 tags: [기업 OTT 구축, 자체 동영상 플랫폼 구축, 위캔디오]
 date: 2026-07-23
 updated: 2026-07-23

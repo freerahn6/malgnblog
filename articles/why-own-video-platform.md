@@ -155,7 +155,6 @@ faq:
 더 깊은 실무는 아래 글에서 이어집니다.
 
 - [대규모 동영상 트래픽도 끊김 없이: 스트리밍 CDN 가이드](/video/streaming-cdn/)
-- [서버 없이 기업 OTT 구축하기: 업로드부터 LMS 진도율 연동까지](/video/video-platform-build-lms-integration/)
 - [넷플릭스형 정기구독 교육으로 새 수익모델 만들기](/lms/subscription-education/)
 
 ## 정리

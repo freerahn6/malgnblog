@@ -77,7 +77,7 @@ def parse(fp):
     d={}
     for line in fm.split('\n'):
         mm=re.match(r'^([a-zA-Z_]+):\s*(.*)$',line)
-        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption'):
+        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption','draft'):
             v=mm.group(2).strip().strip('"').strip("'")
             d[mm.group(1)]=v
     # faq 블록 파싱 (q/a 쌍)
@@ -95,9 +95,17 @@ def parse(fp):
     return d
 
 arts=[]
+_drafts=[]
 for fn in os.listdir(ART):
     if fn.endswith('.md'):
-        d=parse(f"{ART}/{fn}"); d['file']=fn; arts.append(d)
+        d=parse(f"{ART}/{fn}"); d['file']=fn
+        # draft: true 인 글은 빌드에서 완전히 제외한다(페이지·목록·sitemap·rss 모두).
+        # 파일은 그대로 두고 플래그만 지우면 복구된다.
+        if str(d.get('draft','')).split('#')[0].strip().lower()=='true':
+            _drafts.append(d.get('slug',fn)); continue
+        arts.append(d)
+if _drafts:
+    print("DRAFT(숨김) 제외:",", ".join(_drafts))
 # order by date
 arts.sort(key=lambda a:a.get('date',''))
 bysl={a['slug']:a for a in arts}
