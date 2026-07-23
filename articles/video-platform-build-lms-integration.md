@@ -9,6 +9,7 @@ tags: [기업 OTT 구축, 자체 동영상 플랫폼 구축, 위캔디오]
 date: 2026-07-23
 updated: 2026-07-23
 thumbnail: /assets/img/video/video-platform-build-lms-integration/cover.webp
+cover_caption: "이미지 : 맑은소프트 OTT 클라우드"
 author: 안기범
 faq:
   - q: "기업 OTT를 구축하려면 영상 서버와 CDN을 직접 준비해야 하나요?"

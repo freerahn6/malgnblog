@@ -77,7 +77,7 @@ def parse(fp):
     d={}
     for line in fm.split('\n'):
         mm=re.match(r'^([a-zA-Z_]+):\s*(.*)$',line)
-        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author'):
+        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption'):
             v=mm.group(2).strip().strip('"').strip("'")
             d[mm.group(1)]=v
     # faq 블록 파싱 (q/a 쌍)
@@ -158,7 +158,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <h1 class="title">{title}</h1>
 <p class="dek">{desc}</p>
 <div class="byline"><span class="avatar">{ainit}</span><span class="who">{aname}<span class="brole">{arole}</span></span><span class="m"><span class="dot"></span><span class="num">{date}</span><span class="dot"></span><span>읽는 시간 {rt}분</span></span></div>
-<div class="hero-img"><img src="{hero}" alt="{title}"></div>
+{herofig}
 <article>{body}</article>
 {namecard}
 {recentlist}
@@ -181,6 +181,13 @@ for a in arts:
         _ti.append(f'<li><a href="#{sid}"{cls}>{H.escape(txt)}</a></li>')
     toc_html=''.join(_ti)
     hero=IMG.get(a['slug'],COVERS[1])
+    # 대표이미지 캡션(front matter cover_caption)이 있으면 figure+figcaption으로, 없으면 기존 div
+    _cap=a.get('cover_caption','').strip()
+    if _cap:
+        herofig=(f'<figure class="hero-img"><img src="{hero}" alt="{H.escape(a["title"])}">'
+                 f'<figcaption>{H.escape(_cap)}</figcaption></figure>')
+    else:
+        herofig=f'<div class="hero-img"><img src="{hero}" alt="{H.escape(a["title"])}"></div>'
     aname,arole,aroleEn,aen,aemoji=author_of(a)
     _badge=NAMECARDS.get(aname)
     namecard=(f'<div class="namecard"><img class="nc-img" loading="lazy" src="{_badge}" alt="{H.escape(aname)} {arole} - 맑은소프트 블로그 전담팀"></div>') if _badge else ''
@@ -190,7 +197,7 @@ for a in arts:
     _url=f"{SITE}/{a['category']}/{a['slug']}/"
     page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
-        rt=read_min(a['body']),hero=hero,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
+        rt=read_min(a['body']),herofig=herofig,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
         aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK,nav=navhtml(a['category']))
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
     open(f"{d}/index.html",'w',encoding='utf-8').write(page)
