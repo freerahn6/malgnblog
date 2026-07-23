@@ -96,6 +96,32 @@
     return f.format(new java.util.Date());
   }
 
+  // 관리자 비밀번호. statsDir/admin.pw 파일이 있으면 그 내용이 우선한다(배포 없이 교체).
+  static String adminPw(javax.servlet.ServletContext ctx) {
+    java.io.File f = new java.io.File(dataDir(ctx), "admin.pw");
+    if (f.isFile()) {
+      java.io.BufferedReader r = null;
+      try {
+        r = new java.io.BufferedReader(new java.io.InputStreamReader(
+              new java.io.FileInputStream(f), "UTF-8"));
+        String line = r.readLine();
+        if (line != null && line.trim().length() > 0) return line.trim();
+      } catch (Exception ignore) {
+      } finally { if (r != null) try { r.close(); } catch (Exception ignore) { } }
+    }
+    String p = ctx.getInitParameter("adminPassword");
+    return (p == null || p.length() == 0) ? "gamma" : p;
+  }
+
+  // 타이밍 노출을 줄이려고 길이·내용을 한 번에 비교하지 않는다
+  static boolean pwEquals(String a, String b) {
+    if (a == null || b == null) return false;
+    if (a.length() != b.length()) return false;
+    int diff = 0;
+    for (int i = 0; i < a.length(); i++) diff |= a.charAt(i) ^ b.charAt(i);
+    return diff == 0;
+  }
+
   static String jsonEscape(String s) {
     if (s == null) return "";
     StringBuilder b = new StringBuilder(s.length() + 8);

@@ -16,6 +16,13 @@
 - **다음 배치 예약**: news(CSAP·신뢰자산) BOFU 1편 + 「클라우드 LMS 보안·개인정보 심사 통과 가이드」(MOFU). 후자는 근거가 가장 탄탄한데 이번 배합에 자리가 없어 유예한 것이다.
 - 5선 근거·카니발라이제이션 판정·내부링크 설계는 대화 이력 기준이며, 재판단이 필요하면 팀장(b1)에게 다시 물을 것.
 
+## 프로그램 갱신 버튼 추가 (2026-07-23)
+- **배경**: 회사 환경상 cron 자동 갱신 적용이 어렵다는 COO 판단 → 서버가 최초 1회만 당겨오고 이후 멈춘 상태였음(실측: 홈은 07-16 빌드, 07-22 이후 새 글 404). DNS·서버 설치는 이미 완료돼 있었음(자체서버가 서빙 중)
+- **결정**: cron 대신 `/gamma` 대시보드에 **[프로그램 갱신] 버튼** → `POST /api/update` → 서버에서 `git fetch` + `git reset --hard origin/deploy` 실행, 결과를 화면에 표시. 소스 `server/WEB-INF/jsp/update.jsp`
+- **d2 적대 검토 반영**: ① pull(merge)은 이 배포모델과 충돌 → fetch+reset로 교정 ② 익명스레드의 non-final 캡처(Java 6/7 컴파일 실패 위험) → 로컬 final ③ 손자 프로세스 잔존 대비 destroyForcibly 2차 종료 ④ 기본 비번 `gamma`가 이제 배포 트리거까지 여는 문제 → 문서에 교체 경고 강화
+- **안전장치**: 비번 인증·POST 전용·셸 미경유(인자 배열)·60초 타임아웃·동시 1건·`updateEnabled` 스위치. Apache는 `/api/update`만 timeout=90으로 별도 프록시
+- **남은 것**: 서버에서 Resin 계정의 `/home/blog` git 쓰기 권한 확인 + 비번 교체(`admin.pw`). JSP 실측(`curl -X POST /api/update` → 401)은 배포 후 첫 확인
+
 ## 자체서버 대응 완료 (2026-07-22)
 - **확정 환경**: Rocky Linux 9.5 + Apache 2.4.62 + Resin 4.0.67. git 루트 `/home/blog` · 웹루트 `/home/blog/public_html` · 데이터 `/home/blog/data`
 - **배포 경로 확정**: `main` push → Actions 빌드 → `deploy` 브랜치(`public_html/` 아래) → 서버 cron 2분마다 `git fetch && git reset --hard`. **rsync 불필요**(브랜치 트리 = `/home/blog` 모양)
