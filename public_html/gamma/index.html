@@ -26,6 +26,12 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px
 th{color:var(--muted);font-size:12px;font-weight:700}td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}td.rank{width:34px;color:var(--muted);font-weight:700}
 .bar{height:6px;background:var(--accent-soft);border-radius:3px;margin-top:5px}.bar span{display:block;height:100%;background:var(--accent);border-radius:3px}
 a{color:var(--accent);text-decoration:none}
+.updrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.updbtn{border:0;border-radius:8px;background:var(--accent);color:#fff;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer}
+.updbtn:disabled{opacity:.55;cursor:default}
+.updmsg{font-size:13px;color:var(--muted)}
+.updout{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:6px;max-height:280px;overflow:auto;display:none}
+.updout.show{display:block}.ok{color:#20a464}.bad{color:#e5484d}
 </style></head><body>
 <div id="gate"><form class="gatecard" id="gform">
 <div style="font-size:30px;margin-bottom:8px">📊</div><h1>블로그 통계 관리</h1><p>접근하려면 비밀번호를 입력하세요</p>
@@ -38,6 +44,10 @@ a{color:var(--accent);text-decoration:none}
 <div class="stat"><div class="lbl">오늘 조회수</div><div class="val" id="c-today">-</div></div>
 <div class="stat"><div class="lbl">누적 조회수</div><div class="val" id="c-total">-</div></div>
 <div class="stat"><div class="lbl">게시물 수</div><div class="val" id="c-posts">-</div></div></div>
+<div class="panel"><h2>프로그램 갱신</h2>
+<div class="updrow"><button class="updbtn" id="upd">프로그램 갱신</button>
+<span class="updmsg" id="updmsg">GitHub의 최신본을 서버로 당겨옵니다.</span></div>
+<div class="updout" id="updout"></div></div>
 <div class="panel"><h2>일별 조회수 (최근 30일)</h2><div id="chart"></div></div>
 <div class="panel"><h2>게시물 조회수 순위</h2><table><thead><tr><th></th><th>제목</th><th style="text-align:right">조회수</th></tr></thead><tbody id="rank"></tbody></table></div>
 </div></div>
@@ -75,5 +85,23 @@ function load(pw){return fetch('/api/stats?pw='+encodeURIComponent(pw)).then(fun
 $('gform').addEventListener('submit',function(e){e.preventDefault();$('err').textContent='';load($('pw').value).catch(function(){$('err').textContent='비밀번호가 올바르지 않습니다.'})});
 $('refresh').addEventListener('click',function(){var pw=sessionStorage.getItem('bpw');if(pw)load(pw)});
 $('logout').addEventListener('click',function(){sessionStorage.removeItem('bpw');location.reload()});
+$('upd').addEventListener('click',function(){
+ var pw=sessionStorage.getItem('bpw');if(!pw)return;
+ var btn=$('upd'),msg=$('updmsg'),box=$('updout');
+ btn.disabled=true;msg.textContent='갱신 중… (최대 1분)';box.className='updout';
+ fetch('/api/update?pw='+encodeURIComponent(pw),{method:'POST'}).then(function(r){
+  return r.json().then(function(d){return {s:r.status,d:d}})
+ }).then(function(x){
+  var d=x.d;
+  if(x.s===401){msg.innerHTML='<span class="bad">인증이 만료됐습니다. 다시 로그인하세요.</span>';return}
+  if(x.s===409){msg.innerHTML='<span class="bad">이미 갱신이 진행 중입니다.</span>';return}
+  if(x.s===403){msg.innerHTML='<span class="bad">갱신 기능이 꺼져 있습니다.</span>';return}
+  var okc=d.ok?'ok':'bad';
+  msg.innerHTML='<span class="'+okc+'">'+(d.ok?'✔ 완료':'✘ 실패')+'</span> '+
+    (d.exit!==undefined?'(exit '+esc(d.exit)+', '+(d.ms||0)+'ms)':'');
+  box.textContent=(d.output||d.error||'(출력 없음)');box.className='updout show';
+ }).catch(function(){msg.innerHTML='<span class="bad">요청 실패 (네트워크 또는 서버 오류)</span>'}
+ ).then(function(){btn.disabled=false});
+});
 (function(){var pw=sessionStorage.getItem('bpw');if(pw)load(pw).catch(function(){sessionStorage.removeItem('bpw')})})();
 </script></body></html>

@@ -3,9 +3,10 @@
   맑은소프트 블로그 — Resin 웹앱 설정
   웹루트(/home/blog/public_html)의 WEB-INF로 배포된다.
 
-  사이트 본문은 전부 정적 HTML이고, Resin이 맡는 것은 조회수 수집 2개뿐이다.
+  사이트 본문은 전부 정적 HTML이고, Resin이 맡는 것은 아래 3개뿐이다.
     POST /api/track  → 조회수 +1 (본문 없음, 204)
     GET  /api/stats  → 관리자 대시보드(/gamma/)용 집계 JSON (비밀번호 필요)
+    POST /api/update → 대시보드 "프로그램 갱신" 버튼. gitDir에서 git pull 실행 (비밀번호 필요)
 
   JSP 실물은 WEB-INF 아래 있어 직접 URL로 노출되지 않는다(서블릿 매핑으로만 접근).
 -->
@@ -30,6 +31,32 @@
     <param-value>gamma</param-value>
   </context-param>
 
+  <!-- /api/update("프로그램 갱신" 버튼) 관련 설정 -->
+  <!-- git pull 을 실행할 디렉터리 = git 루트. 웹루트(public_html)가 아니라 그 상위다. -->
+  <context-param>
+    <param-name>gitDir</param-name>
+    <param-value>/home/blog</param-value>
+  </context-param>
+  <!-- git 실행 파일. PATH에 없으면 절대경로로 바꾼다(예: /usr/bin/git). -->
+  <context-param>
+    <param-name>gitBin</param-name>
+    <param-value>git</param-value>
+  </context-param>
+  <!-- 당겨올 브랜치 / git이 멈출 때를 대비한 타임아웃(초). -->
+  <context-param>
+    <param-name>gitBranch</param-name>
+    <param-value>deploy</param-value>
+  </context-param>
+  <context-param>
+    <param-name>gitTimeoutSec</param-name>
+    <param-value>60</param-value>
+  </context-param>
+  <!-- 갱신 기능 전체 스위치. 잠그려면 false 로. -->
+  <context-param>
+    <param-name>updateEnabled</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
   <servlet>
     <servlet-name>track</servlet-name>
     <jsp-file>/WEB-INF/jsp/track.jsp</jsp-file>
@@ -46,6 +73,15 @@
   <servlet-mapping>
     <servlet-name>stats</servlet-name>
     <url-pattern>/api/stats</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>update</servlet-name>
+    <jsp-file>/WEB-INF/jsp/update.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>update</servlet-name>
+    <url-pattern>/api/update</url-pattern>
   </servlet-mapping>
 
   <welcome-file-list>

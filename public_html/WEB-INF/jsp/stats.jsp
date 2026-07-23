@@ -6,34 +6,9 @@
 
   응답 형태는 기존 Netlify 함수와 동일하다(대시보드 코드를 고치지 않기 위해).
     { today, total, days:[{date,count}], posts:[{path,count}], date }
---%>
-<%!
-  static String adminPw(javax.servlet.ServletContext ctx) {
-    // 파일이 있으면 그쪽이 우선 — 비밀번호를 바꾸려고 배포할 필요가 없게
-    java.io.File f = new java.io.File(dataDir(ctx), "admin.pw");
-    if (f.isFile()) {
-      java.io.BufferedReader r = null;
-      try {
-        r = new java.io.BufferedReader(new java.io.InputStreamReader(
-              new java.io.FileInputStream(f), "UTF-8"));
-        String line = r.readLine();
-        if (line != null && line.trim().length() > 0) return line.trim();
-      } catch (Exception ignore) {
-      } finally { if (r != null) try { r.close(); } catch (Exception ignore) { } }
-    }
-    String p = ctx.getInitParameter("adminPassword");
-    return (p == null || p.length() == 0) ? "gamma" : p;
-  }
 
-  // 타이밍 노출을 줄이려고 길이·내용을 한 번에 비교하지 않는다
-  static boolean pwEquals(String a, String b) {
-    if (a == null || b == null) return false;
-    if (a.length() != b.length()) return false;
-    int diff = 0;
-    for (int i = 0; i < a.length(); i++) diff |= a.charAt(i) ^ b.charAt(i);
-    return diff == 0;
-  }
-%>
+  adminPw()·pwEquals()는 stats-store.jspf(공용)에 있다.
+--%>
 <%
   response.setHeader("Cache-Control", "no-store");
   response.setHeader("X-Robots-Tag", "noindex, nofollow");
