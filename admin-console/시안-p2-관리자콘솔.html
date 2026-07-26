@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>맑은소프트 블로그 · 관리자 콘솔 (시안 p2)</title>
+<!--
+  시안-p2-관리자콘솔.html — 클릭 가능한 인터랙티브 목업 (self-contained, 오프라인)
+  기획서: 기획-p3-글관리콘솔.md (4장 화면정의 / 9장 체크리스트)
+  디자인 토큰: build.py 413~519행 계승 (--bg --card --text --muted --line --accent --accent-soft)
+  주의: 전부 목업. 백엔드 연동 없음. 실구현 시 API 계약은 기획서 5장 참조.
+  화면ID: S-ADM-1-01 로그인 / S-ADM-1-02 대시보드 / S-ADM-2-01 통계 / S-ADM-3-01 목록 / S-ADM-3-02 편집
+-->
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;--accent-soft:#e7efff;
+  --green:#20a464;--green-soft:#e3f5ec;--gray:#8a94a6;--gray-soft:#eef0f4;--red:#e5484d;--red-soft:#fdeaea;--amber:#c77f16;--amber-soft:#fbf1dc}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--accent-soft:#1a2540;
+  --green:#3ecf8e;--green-soft:#16311f;--gray:#8a94a6;--gray-soft:#222a3a;--red:#ff6b6f;--red-soft:#3a1f22;--amber:#e5a94a;--amber-soft:#352a15}}
+:root[data-theme="dark"]{--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--accent-soft:#1a2540;
+  --green:#3ecf8e;--green-soft:#16311f;--gray:#8a94a6;--gray-soft:#222a3a;--red:#ff6b6f;--red-soft:#3a1f22;--amber:#e5a94a;--amber-soft:#352a15}
+:root[data-theme="light"]{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;--accent-soft:#e7efff;
+  --green:#20a464;--green-soft:#e3f5ec;--gray:#8a94a6;--gray-soft:#eef0f4;--red:#e5484d;--red-soft:#fdeaea;--amber:#c77f16;--amber-soft:#fbf1dc}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+/* ---------- 로그인 게이트 ---------- */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gatecard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:36px 32px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(20,30,50,.10);text-align:center}
+.gatecard h1{font-size:19px;margin:0 0 4px}.gatecard p{color:var(--muted);font-size:13px;margin:0 0 22px}
+.gatecard input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:var(--bg);color:var(--text);text-align:center;letter-spacing:.1em}
+.gatecard input:focus{outline:none;border-color:var(--accent)}
+.gatecard button{width:100%;margin-top:12px;padding:12px;min-height:44px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.gatecard button:disabled{opacity:.6;cursor:default}
+.err{color:var(--red);font-size:13px;margin-top:12px;min-height:18px}
+.gatehint{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.6}
+/* ---------- 앱 셸 ---------- */
+#app{display:none}
+.appbar{position:sticky;top:0;z-index:30;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:10px 16px;flex-wrap:wrap}
+.appbar .brand{font-size:15px;font-weight:800;letter-spacing:-.02em;margin-right:8px;white-space:nowrap}
+.nav{display:flex;gap:2px}
+.nav a{padding:8px 12px;min-height:36px;display:inline-flex;align-items:center;border-radius:8px;font-size:14px;color:var(--muted);font-weight:600}
+.nav a.on{background:var(--accent-soft);color:var(--accent)}
+.appbar .sp{flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--card);color:var(--text);min-width:36px;min-height:36px;border-radius:8px;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 10px}
+.wrap{max-width:1040px;margin:0 auto;padding:22px 18px 80px}
+.pagehead{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.pagehead h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.02em}
+.pagehead .meta{color:var(--muted);font-size:13px}
+.pagehead .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:8px 12px;min-height:36px;border-radius:8px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+.btn.danger{color:var(--red);border-color:var(--red-soft)}
+.btn.danger:hover{border-color:var(--red)}
+.btn:disabled{opacity:.5;cursor:default}
+/* ---------- 카드/패널 ---------- */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:820px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.cards{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stat .lbl{color:var(--muted);font-size:13px;font-weight:600}
+.stat .val{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.panel h2{font-size:15px;margin:0 0 14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.panel h2 .sp{flex:1}
+/* ---------- 테이블 ---------- */
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+th{color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--accent)}
+th .arr{font-size:10px;opacity:.6}
+td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+td.rank{width:34px;color:var(--muted);font-weight:700;text-align:center}
+tr.rowlink{cursor:pointer}
+tr.rowlink:hover{background:var(--accent-soft)}
+.bar{height:6px;background:var(--accent-soft);border-radius:3px;margin-top:5px}
+.bar span{display:block;height:100%;background:var(--accent);border-radius:3px}
+.title-cell{font-weight:600;max-width:340px}
+.title-cell .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+/* ---------- 칩/배지 ---------- */
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge.pub{background:var(--green-soft);color:var(--green)}
+.badge.draft{background:var(--gray-soft);color:var(--gray)}
+.badge.trash{background:var(--red-soft);color:var(--red)}
+.badge.pending{background:var(--amber-soft);color:var(--amber)}
+.funnel{font-size:11px;font-weight:700;color:var(--muted)}
+/* ---------- 필터바 ---------- */
+.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.filterbar select,.filterbar input{padding:8px 10px;min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font-size:13px}
+.filterbar input[type=search]{flex:1;min-width:160px}
+.filterbar select:focus,.filterbar input:focus{outline:none;border-color:var(--accent)}
+.rowact{display:flex;gap:4px;flex-wrap:wrap}
+.rowact button{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:5px 9px;min-height:30px;border-radius:7px;font-size:12px;cursor:pointer}
+.rowact button:hover{border-color:var(--accent);color:var(--accent)}
+.rowact button.del:hover{border-color:var(--red);color:var(--red)}
+/* ---------- 탭 ---------- */
+.tabs{display:inline-flex;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:7px 14px;min-height:34px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+/* ---------- 토글 스위치 ---------- */
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:var(--gray);border-radius:24px;cursor:pointer;transition:.2s}
+.slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked+.slider{background:var(--green)}
+.switch input:checked+.slider:before{transform:translateX(18px)}
+.switch input:focus-visible+.slider{outline:2px solid var(--accent);outline-offset:2px}
+/* ---------- 폼 (편집) ---------- */
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;font-weight:700;color:var(--muted)}
+.field label .req{color:var(--red)}
+.field input,.field select,.field textarea{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--text);font-size:14px;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field.done input,.field.done select{border-color:var(--green)}
+.field.error input,.field.error select,.field.error textarea{border-color:var(--red);box-shadow:0 0 0 3px var(--red-soft)}
+.field input:disabled,.field textarea:disabled{background:var(--bg);color:var(--muted);cursor:not-allowed}
+.field .hint{font-size:12px;color:var(--muted)}
+.field .msg{font-size:12px;color:var(--red);min-height:15px}
+.field.done .msg{color:var(--green)}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:14px}
+/* ---------- 에디터 ---------- */
+.editor-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:0}
+.editor-tabs button{border:0;background:transparent;color:var(--muted);padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.editor-tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.toolbar{display:flex;gap:2px;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-top:0;background:var(--bg)}
+.toolbar button{min-width:32px;min-height:32px;border:1px solid transparent;background:transparent;color:var(--text);border-radius:6px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 8px;font-weight:700}
+.toolbar button:hover{background:var(--card);border-color:var(--line)}
+.toolbar .divider{width:1px;background:var(--line);margin:2px 4px}
+.wysiwyg{border:1px solid var(--line);border-top:0;min-height:280px;padding:16px 18px;background:var(--card);font-size:15px;line-height:1.7;overflow-y:auto;max-height:440px}
+.wysiwyg:focus{outline:none}
+.wysiwyg h2{font-size:19px;margin:18px 0 8px}
+.wysiwyg p{margin:0 0 12px}
+.wysiwyg ul,.wysiwyg ol{margin:0 0 12px;padding-left:22px}
+.wysiwyg table{min-width:0;width:auto;margin:8px 0}
+.wysiwyg td,.wysiwyg th{border:1px solid var(--line);padding:6px 10px}
+.md-view{display:none}
+.md-view textarea{width:100%;min-height:340px;border:1px solid var(--line);border-top:0;padding:16px 18px;background:var(--card);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;resize:vertical}
+.md-view textarea:focus{outline:none}
+.editor-cap{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
+.preserve{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.8}
+.preserve code{background:var(--card);padding:1px 6px;border-radius:5px;color:var(--text);font-size:12px}
+.actionbar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);margin:24px -20px -18px;padding:14px 20px;display:flex;gap:8px;flex-wrap:wrap;border-radius:0 0 14px 14px}
+.actionbar .sp{flex:1}
+/* ---------- 모달 ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,15,25,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{margin:0 0 8px;font-size:17px}
+.modal p{margin:0 0 18px;font-size:14px;color:var(--muted);line-height:1.6}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.modal .diff{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;font-family:ui-monospace,monospace;margin-bottom:16px;white-space:pre-wrap;color:var(--text)}
+/* ---------- 토스트 ---------- */
+#toasts{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--text);color:var(--bg);padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;animation:tin .25s ease}
+.toast.ok{background:var(--green);color:#fff}
+.toast.bad{background:var(--red);color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* ---------- 스켈레톤/빈/에러 ---------- */
+.skel{background:linear-gradient(90deg,var(--line) 25%,var(--card) 50%,var(--line) 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:6px;height:14px}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+.empty,.errbox{text-align:center;padding:44px 20px;color:var(--muted);font-size:14px}
+.empty .big,.errbox .big{font-size:34px;margin-bottom:10px}
+.errbox{color:var(--red)}
+/* SVG 차트 */
+#chart svg,#dchart svg{max-width:100%;height:auto}
+/* 개발자용 상태 시연 */
+.devbar{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-left:auto}
+.devbar select{font-size:11px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--muted)}
+/* prefers-reduced-motion: 모션 대체 (접근성) */
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .skel{background:var(--line)}
+}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:rgba(255,255,255,.9)}}
+</style>
+</head>
+<body>
+
+<!-- ===================== 로그인 게이트 (S-ADM-1-01) ===================== -->
+<div id="gate">
+  <form class="gatecard" id="gform">
+    <div style="font-size:30px;margin-bottom:8px">🗂️</div>
+    <h1>블로그 관리자 콘솔</h1>
+    <p>접근하려면 비밀번호를 입력하세요</p>
+    <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호" autofocus>
+    <button type="submit" id="gbtn"><span id="gbtnlbl">입장</span></button>
+    <div class="err" id="gerr" role="alert"></div>
+    <div class="gatehint">시안(목업): 아무 비밀번호나 입력하면 통과합니다.<br>실구현: <code>POST /api/auth</code> → Bearer 세션토큰(기획서 5·7장)</div>
+  </form>
+</div>
+
+<!-- ===================== 앱 셸 ===================== -->
+<div id="app">
+  <div class="appbar">
+    <span class="brand">🗂️ 맑은소프트 콘솔</span>
+    <nav class="nav" id="nav" aria-label="주 메뉴">
+      <a href="#/dashboard" data-route="dashboard">대시보드</a>
+      <a href="#/stats" data-route="stats">통계</a>
+      <a href="#/posts" data-route="posts">글관리</a>
+    </nav>
+    <span class="sp"></span>
+    <div class="devbar" title="개발자용 상태 시연 — 실서비스엔 없음">
+      <span>상태 시연</span>
+      <select id="devstate" aria-label="상태 시연">
+        <option value="normal">정상</option>
+        <option value="loading">로딩</option>
+        <option value="empty">빈</option>
+        <option value="error">에러</option>
+      </select>
+    </div>
+    <button class="iconbtn" id="themebtn" title="테마 전환" aria-label="테마 전환">🌗</button>
+    <button class="iconbtn" id="logout" title="나가기" aria-label="나가기">⏻</button>
+  </div>
+  <div class="wrap" id="view"><!-- 라우팅으로 채움 --></div>
+</div>
+
+<!-- 모달 마운트 -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true"><div class="modal" id="modal"></div></div>
+<!-- 토스트 마운트 -->
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* =========================================================================
+   목업 데이터  (교육·HRD·LMS·에듀테크. 저자 이채영/한다현/김도윤)
+   ========================================================================= */
+var CATL={lms:"LMS",hrd:"HRD",certification:"자격검정",video:"영상",edutech:"에듀테크",news:"소식"};
+var TODAY="2026-07-26";
+var POSTS=[
+ {file:"lms-도입-체크리스트.md",slug:"lms-checklist",title:"LMS 도입 전 반드시 확인할 체크리스트 10가지",category:"lms",author:"이채영",funnel:"TOFU",date:"2026-07-22",updated:"2026-07-24",status:"published",views:3184},
+ {file:"hrd-교육효과-측정.md",slug:"hrd-training-roi",title:"HRD 담당자를 위한 교육효과 측정법 — 커크패트릭 4단계",category:"hrd",author:"한다현",funnel:"MOFU",date:"2026-07-20",updated:"2026-07-20",status:"published",views:2470},
+ {file:"자격검정-온라인전환.md",slug:"cert-online-transition",title:"자격검정 온라인 전환, 실제 도입기관 사례로 본 5단계",category:"certification",author:"이채영",funnel:"BOFU",date:"2026-07-18",updated:"2026-07-19",status:"published",views:1902},
+ {file:"영상강의-제작-워크플로우.md",slug:"video-production-flow",title:"교육 영상 콘텐츠 제작 워크플로우 A to Z",category:"video",author:"김도윤",funnel:"TOFU",date:"2026-07-15",updated:"2026-07-15",status:"published",views:1544},
+ {file:"에듀테크-트렌드-2026.md",slug:"edutech-trend-2026",title:"2026 에듀테크 트렌드 — AI 튜터부터 러닝 애널리틱스까지",category:"edutech",author:"한다현",funnel:"TOFU",date:"2026-07-12",updated:"2026-07-21",status:"published",views:4021},
+ {file:"신규기능-업데이트-2026-07.md",slug:"release-2026-07",title:"맑은LMS 7월 업데이트 — 학습 대시보드 개편",category:"news",author:"이채영",funnel:"BOFU",date:"2026-07-10",updated:"2026-07-10",status:"published",views:988},
+ {file:"이러닝-roi-계산법.md",slug:"elearning-roi",title:"기업교육 이러닝 ROI, 숫자로 증명하는 법",category:"hrd",author:"한다현",funnel:"MOFU",date:"2026-07-08",updated:"2026-07-09",status:"published",views:1760},
+ {file:"lms-vs-lxp.md",slug:"lms-vs-lxp",title:"LMS와 LXP, 무엇이 다르고 우리 조직엔 무엇이 맞나",category:"lms",author:"김도윤",funnel:"TOFU",date:"2026-07-05",updated:"2026-07-05",status:"published",views:2233},
+ {file:"블렌디드러닝-설계.md",slug:"blended-learning-design",title:"블렌디드 러닝 설계 가이드 — 오프라인과 온라인의 황금비",category:"lms",author:"이채영",funnel:"MOFU",date:"2026-07-03",updated:"2026-07-23",status:"draft",views:0},
+ {file:"마이크로러닝-실전.md",slug:"microlearning-practice",title:"마이크로러닝, 현업에 바로 적용하는 6가지 패턴",category:"edutech",author:"한다현",funnel:"MOFU",date:"2026-06-30",updated:"2026-07-01",status:"published",views:1330},
+ {file:"자격증-취득률-학습설계.md",slug:"cert-pass-rate",title:"자격증 취득률을 끌어올리는 학습 설계 원칙",category:"certification",author:"이채영",funnel:"BOFU",date:"2026-06-27",updated:"2026-06-27",status:"published",views:1471},
+ {file:"동영상강의-완주율.md",slug:"video-completion",title:"동영상 강의 완주율 개선 실험 로그(초안)",category:"video",author:"김도윤",funnel:"MOFU",date:"2026-06-24",updated:"2026-07-02",status:"trash",views:642},
+ {file:"ai튜터-도입사례.md",slug:"ai-tutor-case",title:"AI 튜터 도입 사례 — 실무 적용의 명암",category:"edutech",author:"한다현",funnel:"TOFU",date:"2026-06-20",updated:"2026-07-25",status:"draft",views:0},
+ {file:"hrd-컨퍼런스-후기.md",slug:"hrd-conf-2026",title:"2026 HRD 컨퍼런스 참관기 — 현장에서 건진 인사이트",category:"news",author:"이채영",funnel:"TOFU",date:"2026-06-17",updated:"2026-06-17",status:"published",views:815}
+];
+// pending(반영 대기) 표시용 — 목업으로 1건 지정
+POSTS[1].pending=true;
+
+// 30일치 일별 조회수 (시드 기반, 재현 가능)
+function buildDays(){
+  var out=[],base=new Date("2026-06-27T00:00:00"),seed=7;
+  for(var i=0;i<30;i++){
+    var d=new Date(base.getTime()+i*86400000);
+    seed=(seed*9301+49297)%233280;var r=seed/233280;
+    var wd=d.getDay(),weekend=(wd===0||wd===6)?0.6:1;
+    var c=Math.round((120+r*180)*weekend + i*3);
+    out.push({date:d.toISOString().slice(0,10),count:c});
+  }
+  return out;
+}
+var DAYS=buildDays();
+var STATS={
+  today:DAYS[DAYS.length-1].count,
+  total:POSTS.reduce(function(s,p){return s+p.views},0),
+  days:DAYS
+};
+
+/* =========================================================================
+   유틸
+   ========================================================================= */
+function $(id){return document.getElementById(id)}
+function el(sel){return document.querySelector(sel)}
+function fmt(n){return (n||0).toLocaleString('ko-KR')}
+function esc(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function statusBadge(st,pending){
+  var b={published:['pub','● 게시'],draft:['draft','◌ 비게시'],trash:['trash','✕ 휴지통']}[st];
+  var h='<span class="badge '+b[0]+'">'+b[1]+'</span>';
+  if(pending)h+=' <span class="badge pending" title="커밋됨 · 빌드 반영 전">⏳ 반영 대기중</span>';
+  return h;
+}
+function toast(msg,kind){
+  var t=document.createElement('div');t.className='toast'+(kind?' '+kind:'');
+  t.textContent=(kind==='ok'?'✔ ':kind==='bad'?'✘ ':'')+msg;
+  $('toasts').appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},2600);
+}
+function openModal(html){$('modal').innerHTML=html;$('overlay').classList.add('show');
+  var f=$('modal').querySelector('button,[tabindex]');if(f)f.focus();}
+function closeModal(){$('overlay').classList.remove('show');$('modal').innerHTML=''}
+$('overlay').addEventListener('click',function(e){if(e.target===$('overlay'))closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('overlay').classList.contains('show'))closeModal()});
+
+/* =========================================================================
+   테마 토글
+   ========================================================================= */
+$('themebtn').addEventListener('click',function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var next=cur==='dark'?'light':(cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));
+  document.documentElement.setAttribute('data-theme',next);
+});
+
+/* =========================================================================
+   로그인
+   ========================================================================= */
+$('gform').addEventListener('submit',function(e){
+  e.preventDefault();$('gerr').textContent='';
+  var btn=$('gbtn');btn.disabled=true;$('gbtnlbl').innerHTML='<span class="spin"></span> 확인 중…';
+  setTimeout(function(){                       // 로딩 상태 시연
+    btn.disabled=false;$('gbtnlbl').textContent='입장';
+    // 목업: 빈 값이면 에러라인, 아니면 통과
+    if(!$('pw').value.trim()){$('gerr').textContent='비밀번호가 올바르지 않습니다.';return;}
+    enterApp();
+  },650);
+});
+function enterApp(){
+  $('gate').style.display='none';$('app').style.display='block';
+  if(!location.hash||location.hash==='#/')location.hash='#/dashboard';else route();
+}
+$('logout').addEventListener('click',function(){
+  $('app').style.display='none';$('gate').style.display='flex';$('pw').value='';$('pw').focus();
+});
+
+/* =========================================================================
+   개발자용 상태 시연
+   ========================================================================= */
+var DEV='normal';
+$('devstate').addEventListener('change',function(){DEV=this.value;route();});
+
+/* =========================================================================
+   라우터 (해시)
+   ========================================================================= */
+function parseHash(){
+  var h=location.hash.replace(/^#\//,'')||'dashboard';
+  var q={};var parts=h.split('?');var path=parts[0];
+  if(parts[1])parts[1].split('&').forEach(function(kv){var a=kv.split('=');q[a[0]]=decodeURIComponent(a[1]||'')});
+  return {path:path.split('/')[0],sub:path.split('/')[1],q:q};
+}
+function route(){
+  if($('app').style.display==='none')return;
+  var r=parseHash();
+  // 활성 nav
+  [].forEach.call($('nav').querySelectorAll('a'),function(a){
+    a.classList.toggle('on',a.getAttribute('data-route')===r.path);
+  });
+  var v=$('view');
+  if(r.path==='dashboard')renderDashboard(v);
+  else if(r.path==='stats')renderStats(v);
+  else if(r.path==='posts'&&r.sub==='edit')renderEdit(v,r.q.file);
+  else if(r.path==='posts')renderPosts(v);
+  else renderDashboard(v);
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* 상태별 헬퍼 (로딩/빈/에러 공통 블록) */
+function stateBlock(kind,onretry){
+  if(kind==='loading')return '<div class="panel"><div class="skel" style="width:40%;height:18px;margin-bottom:16px"></div>'+
+    Array(5).join()+'<div class="skel" style="height:14px;margin:12px 0"></div><div class="skel" style="height:14px;margin:12px 0"></div><div class="skel" style="height:14px;margin:12px 0;width:70%"></div></div>';
+  if(kind==='empty')return '<div class="panel empty"><div class="big">📭</div>표시할 데이터가 없습니다.</div>';
+  if(kind==='error')return '<div class="panel errbox"><div class="big">⚠️</div>데이터를 불러오지 못했습니다.<br><button class="btn primary" style="margin-top:14px" onclick="route()">다시 시도</button></div>';
+  return '';
+}
+
+/* =========================================================================
+   차트 (build.py 스타일 계승)
+   ========================================================================= */
+function drawChart(mount,days){
+  days=days.slice();
+  if(!days.length){mount.innerHTML='<p style="color:var(--muted);font-size:13px">아직 데이터가 없습니다.</p>';return;}
+  var W=880,H=220,pad=30,ih=H-pad*2,iw=W-pad*2,base=pad+ih;
+  var max=Math.max.apply(null,days.map(function(d){return d.count}));if(max<1)max=1;
+  var n=days.length;
+  var pts=days.map(function(d,i){var x=pad+(n<=1?iw/2:iw*i/(n-1));var y=pad+ih-(d.count/max)*ih;return [x,y,d]});
+  var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1)}).join(' ');
+  var area='M '+pad+' '+base+' L '+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' L ')+' L '+pts[n-1][0].toFixed(1)+' '+base+' Z';
+  var dots=pts.map(function(p){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.5" fill="var(--accent)"><title>'+p[2].date+': '+fmt(p[2].count)+'</title></circle>'}).join('');
+  function lbl(p){return '<text x="'+p[0].toFixed(1)+'" y="'+(H-6)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+p[2].date.slice(5)+'</text>'}
+  var labels=[lbl(pts[0])];if(n>2)labels.push(lbl(pts[Math.floor(n/2)]));if(n>1)labels.push(lbl(pts[n-1]));
+  mount.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="일별 조회수 추이">'+
+    '<path d="'+area+'" fill="var(--accent-soft)" opacity=".55"/>'+
+    '<polyline points="'+poly+'" fill="none" stroke="var(--accent)" stroke-width="2"/>'+dots+labels.join('')+'</svg>';
+}
+
+/* =========================================================================
+   화면 2 — 대시보드 (S-ADM-1-02)
+   ========================================================================= */
+function renderDashboard(v){
+  var pub=POSTS.filter(function(p){return p.status==='published'}).length;
+  var drafts=POSTS.filter(function(p){return p.status==='draft'}).length;
+  var head='<div class="pagehead"><h1>대시보드</h1><span class="meta">'+TODAY+' 09:12 기준 (KST)</span><span class="sp"></span>'+
+    '<button class="btn" onclick="route()">↻ 새로고침</button></div>';
+  if(DEV==='loading'){v.innerHTML=head+'<div class="cards">'+Array(5).join('<div class="stat"><div class="skel" style="width:50%;margin-bottom:10px"></div><div class="skel" style="height:28px;width:70%"></div></div>')+'</div>'+stateBlock('loading');return;}
+  if(DEV==='error'){v.innerHTML=head+'<div class="panel errbox"><div class="big">⚠️</div>지표를 불러오지 못했습니다.<br><button class="btn primary" style="margin-top:14px" onclick="route()">다시 시도</button></div>';return;}
+  var empty=DEV==='empty';
+  var cards='<div class="cards">'+
+    '<div class="stat"><div class="lbl">오늘 조회수</div><div class="val">'+(empty?'0':fmt(STATS.today))+'</div><div class="sub">전일 대비 '+(empty?'—':'+8.2%')+'</div></div>'+
+    '<div class="stat"><div class="lbl">누적 조회수</div><div class="val">'+(empty?'0':fmt(STATS.total))+'</div><div class="sub">전체 기간</div></div>'+
+    '<div class="stat"><div class="lbl">게시물 수</div><div class="val">'+(empty?'0':fmt(pub))+'</div><div class="sub">게시중</div></div>'+
+    '<div class="stat"><div class="lbl">비게시 수</div><div class="val">'+(empty?'0':fmt(drafts))+'</div><div class="sub">draft</div></div>'+
+    '</div>';
+  var update='<div class="panel"><h2>프로그램 갱신</h2>'+
+    '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">'+
+    '<button class="btn primary" id="updbtn" onclick="programUpdate()">⟳ 프로그램 갱신</button>'+
+    '<span class="meta" id="updmsg">GitHub의 최신본을 서버로 당겨옵니다.</span></div>'+
+    '<pre id="updout" style="display:none;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:6px 0 0;max-height:280px;overflow:auto"></pre></div>';
+  var shortcuts='<div class="panel"><h2>바로가기</h2><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn primary" onclick="location.hash=\'#/posts\'">📝 글관리</button>'+
+    '<button class="btn" onclick="location.hash=\'#/stats\'">📊 통계</button>'+
+    '<button class="btn" disabled title="phase-2 예정">＋ 새 글 작성</button>'+
+    '</div></div>';
+  var recent;
+  if(empty){
+    recent='<div class="panel"><h2>최근 글</h2><div class="empty"><div class="big">✍️</div>발행된 글이 없습니다.</div></div>';
+  }else{
+    var rows=POSTS.filter(function(p){return p.status!=='trash'}).slice(0,8).map(function(p){
+      return '<tr class="rowlink" tabindex="0" role="link" onclick="goEdit(\''+p.file+'\')" onkeydown="if(event.key===\'Enter\')goEdit(\''+p.file+'\')">'+
+        '<td class="title-cell">'+esc(p.title)+'</td>'+
+        '<td><span class="chip">'+CATL[p.category]+'</span></td>'+
+        '<td>'+esc(p.author)+'</td>'+
+        '<td>'+p.date+'</td>'+
+        '<td>'+statusBadge(p.status,p.pending)+'</td>'+
+        '<td class="n">'+fmt(p.views)+'</td></tr>';
+    }).join('');
+    recent='<div class="panel"><h2>최근 글 <span class="sp"></span><a href="#/posts" style="font-size:12px">전체 보기 →</a></h2>'+
+      '<div class="tablewrap"><table><thead><tr><th>제목</th><th>카테고리</th><th>저자</th><th>발행일</th><th>상태</th><th style="text-align:right">조회수</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  }
+  v.innerHTML=head+cards+update+recent+shortcuts;
+}
+function goEdit(file){location.hash='#/posts/edit?file='+encodeURIComponent(file);}
+function programUpdate(){
+  var btn=document.getElementById('updbtn'),msg=document.getElementById('updmsg'),box=document.getElementById('updout');
+  if(btn)btn.disabled=true;
+  if(msg)msg.textContent='갱신 중… (최대 1분)';
+  toast('프로그램 갱신을 시작했습니다… (목업)','ok');
+  setTimeout(function(){
+    if(msg)msg.innerHTML='<span style="color:#20a464;font-weight:700">✔ 완료</span> (exit 0, 1382ms)';
+    if(box){box.style.display='block';box.textContent='Fetching origin\nHEAD is now at 3f9a1c2 publish: 신입사원 온보딩 교육, LMS로 설계하는 법\n갱신 완료 · GitHub 최신본이 서버에 반영되었습니다.';}
+    if(btn)btn.disabled=false;
+    toast('갱신 완료 · GitHub 최신본 반영됨','ok');
+  },1400);
+}
+
+/* =========================================================================
+   화면 3 — 통계 (S-ADM-2-01)
+   ========================================================================= */
+var STAT_PERIOD='30';
+var STAT_GROUP='none';
+function periodDays(){
+  if(STAT_PERIOD==='today')return DAYS.slice(-1);
+  if(STAT_PERIOD==='7')return DAYS.slice(-7);
+  if(STAT_PERIOD==='30')return DAYS.slice(-30);
+  return DAYS.slice();
+}
+function renderStats(v){
+  var head='<div class="pagehead"><h1>통계</h1><span class="meta">'+TODAY+' 기준 (KST)</span></div>';
+  if(DEV==='loading'){v.innerHTML=head+stateBlock('loading');return;}
+  if(DEV==='error'){v.innerHTML=head+'<div class="panel errbox"><div class="big">⚠️</div>통계를 불러오지 못했습니다.<br><button class="btn primary" style="margin-top:14px" onclick="route()">다시 시도</button></div>';return;}
+  if(DEV==='empty'){v.innerHTML=head+'<div class="panel empty"><div class="big">📈</div>아직 조회 데이터가 없습니다.</div>';return;}
+  var per=periodDays();
+  var sum=per.reduce(function(s,d){return s+d.count},0);
+  var avg=Math.round(sum/per.length);
+  var peak=per.reduce(function(m,d){return d.count>m.count?d:m},per[0]);
+  var tabBtn=function(val,lbl){return '<button class="'+(STAT_PERIOD===val?'on':'')+'" onclick="STAT_PERIOD=\''+val+'\';route()">'+lbl+'</button>'};
+  var periodTabs='<div class="tabs" role="tablist">'+tabBtn('today','오늘')+tabBtn('7','7일')+tabBtn('30','30일')+tabBtn('all','전체')+'</div>';
+  var summary='<div class="cards">'+
+    '<div class="stat"><div class="lbl">기간 합계</div><div class="val">'+fmt(sum)+'</div></div>'+
+    '<div class="stat"><div class="lbl">일 평균</div><div class="val">'+fmt(avg)+'</div></div>'+
+    '<div class="stat"><div class="lbl">최고일</div><div class="val">'+fmt(peak.count)+'</div><div class="sub">'+peak.date+'</div></div>'+
+    '<div class="stat"><div class="lbl">오늘</div><div class="val">'+fmt(STATS.today)+'</div></div>'+
+    '</div>';
+  // 순위표
+  var ranked=POSTS.filter(function(p){return p.status==='published'}).slice().sort(function(a,b){return b.views-a.views});
+  var maxV=(ranked[0]&&ranked[0].views)||1;
+  var rankRows=ranked.map(function(p,i){var w=Math.round(p.views/maxV*100);
+    return '<tr><td class="rank">'+(i+1)+'</td><td><a href="#/posts/edit?file='+encodeURIComponent(p.file)+'">'+esc(p.title)+'</a><div class="bar"><span style="width:'+w+'%"></span></div></td><td class="n">'+fmt(p.views)+'</td></tr>';
+  }).join('');
+  // 그룹지표 탭 (phase-2 자리)
+  var groupTabs='<div class="tabs" role="tablist" style="margin-bottom:14px">'+
+    '<button class="'+(STAT_GROUP==='none'?'on':'')+'" onclick="STAT_GROUP=\'none\';route()">순위</button>'+
+    '<button class="'+(STAT_GROUP==='cat'?'on':'')+'" onclick="STAT_GROUP=\'cat\';route()">카테고리</button>'+
+    '<button class="'+(STAT_GROUP==='funnel'?'on':'')+'" onclick="STAT_GROUP=\'funnel\';route()">퍼널</button>'+
+    '<button class="'+(STAT_GROUP==='author'?'on':'')+'" onclick="STAT_GROUP=\'author\';route()">저자</button>'+
+    '</div>';
+  var groupBody;
+  if(STAT_GROUP==='none'){
+    groupBody='<div class="tablewrap"><table><thead><tr><th></th><th>제목</th><th style="text-align:right">조회수</th></tr></thead><tbody>'+rankRows+'</tbody></table></div>';
+  }else{
+    groupBody='<div class="empty"><div class="big">🚧</div>그룹 지표(카테고리·퍼널·저자)는 <b>준비중</b>입니다.<br><span style="font-size:12px">phase-2 — build.py <code>_pmeta</code> 확장 후 클라이언트 조인으로 제공 (기획서 4.2)</span></div>';
+  }
+  v.innerHTML=head+
+    '<div class="panel"><h2>기간 선택 <span class="sp"></span>'+periodTabs+'</h2><div id="chart"></div></div>'+
+    summary+
+    '<div class="panel"><h2>글별 조회수</h2>'+groupTabs+groupBody+'</div>';
+  drawChart($('chart'),per);
+}
+
+/* =========================================================================
+   화면 4 — 글관리 목록 (S-ADM-3-01)
+   ========================================================================= */
+var F={status:'all',cat:'all',author:'all',funnel:'all',q:''};
+var SORT={key:'date',dir:'desc'};
+function renderPosts(v){
+  var head='<div class="pagehead"><h1>글관리</h1><span class="meta" id="pcount"></span><span class="sp"></span></div>';
+  if(DEV==='loading'){v.innerHTML=head+stateBlock('loading');return;}
+  if(DEV==='error'){v.innerHTML=head+'<div class="panel errbox"><div class="big">⚠️</div>목록을 불러오지 못했습니다.<br><button class="btn primary" style="margin-top:14px" onclick="route()">다시 시도</button></div>';return;}
+  var authors=Array.from(new Set(POSTS.map(function(p){return p.author})));
+  var sel=function(id,cur,opts){return '<select id="'+id+'" aria-label="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(cur===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'};
+  var filterbar='<div class="filterbar">'+
+    sel('f-status',F.status,[['all','상태 전체'],['published','게시'],['draft','비게시'],['trash','휴지통']])+
+    sel('f-cat',F.cat,[['all','카테고리 전체']].concat(Object.keys(CATL).map(function(k){return [k,CATL[k]]})))+
+    sel('f-author',F.author,[['all','저자 전체']].concat(authors.map(function(a){return [a,a]})))+
+    sel('f-funnel',F.funnel,[['all','퍼널 전체'],['TOFU','TOFU'],['MOFU','MOFU'],['BOFU','BOFU']])+
+    '<input type="search" id="f-q" placeholder="제목·슬러그 검색" value="'+esc(F.q)+'" aria-label="검색">'+
+    '</div>';
+  v.innerHTML=head+filterbar+'<div class="panel" style="padding:0"><div class="tablewrap" id="ptable"></div></div>';
+  // 필터 이벤트
+  ['f-status','f-cat','f-author','f-funnel'].forEach(function(id){$(id).addEventListener('change',function(){
+    F.status=$('f-status').value;F.cat=$('f-cat').value;F.author=$('f-author').value;F.funnel=$('f-funnel').value;drawTable();});});
+  $('f-q').addEventListener('input',function(){F.q=this.value;drawTable();});
+  drawTable();
+}
+function filteredPosts(){
+  var list=POSTS.filter(function(p){
+    if(F.status!=='all'&&p.status!==F.status)return false;
+    if(F.cat!=='all'&&p.category!==F.cat)return false;
+    if(F.author!=='all'&&p.author!==F.author)return false;
+    if(F.funnel!=='all'&&p.funnel!==F.funnel)return false;
+    if(F.q){var q=F.q.toLowerCase();if(p.title.toLowerCase().indexOf(q)<0&&p.slug.toLowerCase().indexOf(q)<0)return false;}
+    return true;
+  });
+  var dir=SORT.dir==='asc'?1:-1;
+  list.sort(function(a,b){var x=a[SORT.key],y=b[SORT.key];if(SORT.key==='views'){return (x-y)*dir;}return (x<y?-1:x>y?1:0)*dir;});
+  return list;
+}
+function drawTable(){
+  if(!$('ptable'))return;   // 목록 화면이 아닐 때(예: 편집 화면에서 삭제) 안전 종료
+  var list=filteredPosts();
+  if($('pcount'))$('pcount').textContent=list.length+'건 / 전체 '+POSTS.length+'건';
+  var arr=function(k){return SORT.key===k?'<span class="arr">'+(SORT.dir==='asc'?'▲':'▼')+'</span>':''};
+  var th=function(k,lbl){return '<th class="sortable" onclick="sortBy(\''+k+'\')">'+lbl+' '+arr(k)+'</th>'};
+  var head='<table><thead><tr>'+
+    th('title','제목')+'<th>카테고리</th>'+th('author','저자')+th('date','발행일')+th('updated','수정일')+
+    '<th>상태</th>'+th('views','조회수')+'<th>액션</th></tr></thead><tbody>';
+  var body;
+  if(!list.length){
+    body='<tr><td colspan="8"><div class="empty"><div class="big">🔍</div>'+
+      (POSTS.length? '조건에 맞는 글이 없습니다.' : '아직 글이 없습니다.')+'</div></td></tr>';
+  }else{
+    body=list.map(function(p){
+      var isTrash=p.status==='trash';
+      var act=isTrash
+        ? '<button onclick="doRestore(\''+p.file+'\',event)">복원</button>'
+        : '<button onclick="goEdit(\''+p.file+'\')">수정</button>'+
+          '<button onclick="doToggle(\''+p.file+'\',event)">'+(p.status==='published'?'비게시':'게시')+'</button>'+
+          '<button class="del" onclick="doDelete(\''+p.file+'\',event)">삭제</button>';
+      return '<tr>'+
+        '<td class="title-cell">'+esc(p.title)+'<div class="sub">/'+p.category+'/'+p.slug+'/</div></td>'+
+        '<td><span class="chip">'+CATL[p.category]+'</span> <span class="funnel">'+p.funnel+'</span></td>'+
+        '<td>'+esc(p.author)+'</td>'+
+        '<td>'+p.date+'</td>'+
+        '<td>'+p.updated+'</td>'+
+        '<td>'+statusBadge(p.status,p.pending)+'</td>'+
+        '<td class="n">'+fmt(p.views)+'</td>'+
+        '<td><div class="rowact">'+act+'</div></td></tr>';
+    }).join('');
+  }
+  $('ptable').innerHTML=head+body+'</tbody></table>';
+}
+function sortBy(k){if(SORT.key===k)SORT.dir=SORT.dir==='asc'?'desc':'asc';else{SORT.key=k;SORT.dir='desc';}drawTable();}
+function findPost(file){return POSTS.filter(function(p){return p.file===file})[0];}
+
+// 온오프 토글 → 비게시 전환 시 확인 모달 (MPU)
+function doToggle(file,e){if(e)e.stopPropagation();var p=findPost(file);
+  if(p.status==='published'){
+    openModal('<h3>이 글을 비게시할까요?</h3>'+
+      '<p>「'+esc(p.title)+'」을(를) 비게시로 전환합니다.<br>다음 빌드 후 사이트에서 <b>완전히 사라집니다(404)</b> — 목록·카테고리·검색에서 제외됩니다. 되돌리기는 언제든 가능합니다.</p>'+
+      '<div class="acts"><button class="btn" onclick="closeModal()">취소</button>'+
+      '<button class="btn primary" onclick="applyToggle(\''+file+'\')">비게시</button></div>');
+  }else{ applyToggle(file); }
+}
+function applyToggle(file){var p=findPost(file);
+  p.status=p.status==='published'?'draft':'published';p.pending=true;closeModal();
+  toast('상태 변경됨 · 반영 대기중(빌드 중)','ok');drawTable();
+}
+// 삭제 → 휴지통 이동 확인 모달 (MPU)
+function doDelete(file,e){if(e)e.stopPropagation();var p=findPost(file);
+  openModal('<h3>휴지통으로 이동할까요?</h3>'+
+    '<p>「'+esc(p.title)+'」을(를) 휴지통으로 옮깁니다.<br>사이트에서 내려가지만 <b>복원 가능</b>합니다(<code>articles/_trash/</code> 이동 커밋).</p>'+
+    '<div class="acts"><button class="btn" onclick="closeModal()">취소</button>'+
+    '<button class="btn danger" onclick="applyDelete(\''+file+'\')">휴지통으로 이동</button></div>');
+}
+function applyDelete(file){var p=findPost(file);p.status='trash';p.pending=true;closeModal();
+  toast('휴지통으로 이동됨','ok');
+  if($('ptable'))drawTable();else location.hash='#/posts';   // 편집 화면에서 삭제하면 목록 복귀
+}
+function doRestore(file,e){if(e)e.stopPropagation();var p=findPost(file);p.status='draft';p.pending=true;
+  toast('복원됨 · 비게시 상태로 되돌렸습니다','ok');drawTable();
+}
+
+/* =========================================================================
+   화면 5 — 글 편집 (S-ADM-3-02)
+   ========================================================================= */
+var EDIT_TAB='wysiwyg';
+var BODY_HTML='<h2>왜 지금 LMS 도입을 검토해야 하나</h2>'+
+  '<p>교육 운영이 엑셀과 이메일에 흩어져 있으면, 학습 이력은 쌓이지 않고 담당자만 지칩니다. LMS는 <b>등록·수강·수료·평가</b>를 한 흐름으로 묶습니다.</p>'+
+  '<h2>도입 전 확인할 10가지</h2>'+
+  '<ul><li>학습자 규모와 동시접속 피크</li><li>기존 HR·인사 시스템 연동 여부</li><li>모바일 학습 비중</li><li>수료 기준·이수증 자동 발급</li></ul>'+
+  '<p>아래 표는 규모별 권장 구성입니다.</p>'+
+  '<table><thead><tr><th>규모</th><th>권장 구성</th></tr></thead><tbody><tr><td>~500명</td><td>클라우드 표준형</td></tr><tr><td>500명+</td><td>전용 인스턴스</td></tr></tbody></table>';
+var BODY_MD='## 왜 지금 LMS 도입을 검토해야 하나\n\n교육 운영이 엑셀과 이메일에 흩어져 있으면, 학습 이력은 쌓이지 않고 담당자만 지칩니다. LMS는 **등록·수강·수료·평가**를 한 흐름으로 묶습니다.\n\n## 도입 전 확인할 10가지\n\n- 학습자 규모와 동시접속 피크\n- 기존 HR·인사 시스템 연동 여부\n- 모바일 학습 비중\n- 수료 기준·이수증 자동 발급\n\n아래 표는 규모별 권장 구성입니다.\n\n| 규모 | 권장 구성 |\n|---|---|\n| ~500명 | 클라우드 표준형 |\n| 500명+ | 전용 인스턴스 |';
+
+function renderEdit(v,file){
+  var p=findPost(file)||POSTS[0];
+  var head='<div class="pagehead"><h1>글 편집</h1><span class="meta">'+esc(p.file)+'</span><span class="sp"></span>'+
+    '<a href="#/posts" class="btn">← 목록</a></div>';
+  if(DEV==='loading'){v.innerHTML=head+stateBlock('loading');return;}
+  if(DEV==='error'){v.innerHTML=head+'<div class="panel errbox"><div class="big">🔎</div>글을 찾을 수 없습니다(삭제됐을 수 있음).<br><button class="btn primary" style="margin-top:14px" onclick="location.hash=\'#/posts\'">목록으로</button></div>';return;}
+  var catOpts=Object.keys(CATL).map(function(k){return '<option value="'+k+'"'+(p.category===k?' selected':'')+'>'+CATL[k]+'</option>'}).join('');
+  var funOpts=['TOFU','MOFU','BOFU'].map(function(f){return '<option'+(p.funnel===f?' selected':'')+'>'+f+'</option>'}).join('');
+  var authors=Array.from(new Set(POSTS.map(function(x){return x.author})));
+  var authOpts=authors.map(function(a){return '<option'+(p.author===a?' selected':'')+'>'+esc(a)+'</option>'}).join('');
+  // 메타 폼 — slug 필드에 '오류' 상태 예시(중복)
+  var meta='<div class="panel"><h2>메타 정보</h2><div class="form-grid">'+
+    '<div class="field full done"><label>제목 <span class="req">*</span></label>'+
+      '<input value="'+esc(p.title)+'"><div class="msg">✓ 사용 가능</div></div>'+
+    '<div class="field full"><label>설명(description)</label>'+
+      '<textarea rows="2">교육을 운영하는 사람을 위한 LMS 도입 실전 체크리스트.</textarea><div class="hint">300자 권장</div></div>'+
+    '<div class="field"><label>카테고리 <span class="req">*</span></label><select>'+catOpts+'</select></div>'+
+    '<div class="field error"><label>슬러그(slug) <span class="req">*</span></label>'+
+      '<input value="'+esc(p.slug)+'"><div class="msg">이미 존재하는 슬러그입니다 — 다른 값을 입력하세요.</div></div>'+
+    '<div class="field"><label>퍼널(funnel)</label><select>'+funOpts+'</select></div>'+
+    '<div class="field"><label>저자</label><select>'+authOpts+'</select></div>'+
+    '<div class="field"><label>발행일(date)</label><input type="text" value="'+p.date+'" disabled><div class="hint">최초 발행일 · 수정 불가</div></div>'+
+    '<div class="field"><label>게시 상태</label><div class="toggle-row"><label class="switch"><input type="checkbox" id="pubtoggle"'+(p.status==='published'?' checked':'')+'><span class="slider"></span></label><span id="pubtogglelbl">'+(p.status==='published'?'게시':'비게시')+'</span></div></div>'+
+    '</div></div>';
+  // 본문 에디터
+  var editor='<div class="panel"><h2>본문</h2>'+
+    '<div class="editor-tabs" role="tablist">'+
+      '<button id="tab-wy" class="'+(EDIT_TAB==='wysiwyg'?'on':'')+'" onclick="switchEditor(\'wysiwyg\')" role="tab">WYSIWYG</button>'+
+      '<button id="tab-md" class="'+(EDIT_TAB==='md'?'on':'')+'" onclick="switchEditor(\'md\')" role="tab">Markdown</button>'+
+    '</div>'+
+    '<div id="wy-wrap"'+(EDIT_TAB==='md'?' style="display:none"':'')+'>'+
+      '<div class="toolbar" role="toolbar" aria-label="서식 도구">'+
+        '<button onclick="fmtCmd(\'bold\')" title="굵게" aria-label="굵게"><b>B</b></button>'+
+        '<button onclick="fmtCmd(\'italic\')" title="기울임" aria-label="기울임"><i>I</i></button>'+
+        '<span class="divider"></span>'+
+        '<button onclick="fmtBlock(\'h2\')" title="제목 H2">H2</button>'+
+        '<button onclick="fmtCmd(\'insertUnorderedList\')" title="목록">≔</button>'+
+        '<button onclick="fmtCmd(\'insertOrderedList\')" title="번호목록">≡</button>'+
+        '<span class="divider"></span>'+
+        '<button onclick="fmtLink()" title="링크">🔗</button>'+
+        '<button onclick="fmtInsert(\'table\')" title="표">▦</button>'+
+        '<button onclick="fmtInsert(\'image\')" title="이미지">🖼</button>'+
+      '</div>'+
+      '<div class="wysiwyg" id="wysiwyg" contenteditable="true" aria-label="본문 편집 영역">'+BODY_HTML+'</div>'+
+    '</div>'+
+    '<div class="md-view" id="md-wrap"'+(EDIT_TAB==='md'?' style="display:block"':'')+'>'+
+      '<textarea id="mdarea" aria-label="마크다운 원문">'+esc(BODY_MD)+'</textarea>'+
+    '</div>'+
+    '<div class="editor-cap">ℹ️ 실구현: <b>TOAST UI Editor 듀얼모드</b>(WYSIWYG↔Markdown 토글). 이 시안은 CDN 불가 제약으로 contenteditable로 흉내낸 목업입니다. (기획서 6장)</div>'+
+    '</div>';
+  // 보존 필드
+  var preserve='<div class="panel"><h2>보존 필드 <span style="font-size:11px;font-weight:600;color:var(--muted)">(읽기전용 · 저장 시 원문 그대로 유지)</span></h2>'+
+    '<div class="preserve">'+
+    '<code>cluster</code>: lms-adoption-guide<br>'+
+    '<code>tags</code>: [LMS도입, 체크리스트, 기업교육]<br>'+
+    '<code>thumbnail</code>: /images/lms-checklist-cover.png<br>'+
+    '<code>faq</code>: 3개 항목 (편집 UI는 phase-2)'+
+    '</div><div class="editor-cap">⚠️ build.py가 읽지 않는 필드도 저장 시 <b>파싱→일부만 수정→나머지 재직렬화</b>로 절대 잃지 않습니다. (기획서 3.4)</div></div>';
+  // 액션바
+  var actions='<div class="actionbar">'+
+    '<button class="btn primary" id="savebtn" onclick="doSave(false)">저장</button>'+
+    '<button class="btn" onclick="doSave(true)">저장 후 게시</button>'+
+    '<span class="sp"></span>'+
+    '<button class="btn" onclick="location.hash=\'#/posts\'">취소</button>'+
+    '<button class="btn danger" onclick="doDelete(\''+p.file+'\')">삭제</button>'+
+    '</div>';
+  v.innerHTML=head+meta+editor+preserve+
+    '<div class="panel" style="padding:0;border:0;background:transparent;margin-bottom:0">'+actions+'</div>';
+  // 게시 토글 라벨
+  var pt=$('pubtoggle');if(pt)pt.addEventListener('change',function(){$('pubtogglelbl').textContent=this.checked?'게시':'비게시';});
+}
+function switchEditor(mode){
+  if(mode===EDIT_TAB)return;
+  if(mode==='md'){ // WYSIWYG → MD : 목업에선 고정 MD 원문 표시(실구현은 getMarkdown())
+    if($('mdarea'))$('mdarea').value=BODY_MD;
+  }
+  EDIT_TAB=mode;
+  $('tab-wy').classList.toggle('on',mode==='wysiwyg');
+  $('tab-md').classList.toggle('on',mode==='md');
+  $('wy-wrap').style.display=mode==='wysiwyg'?'block':'none';
+  $('md-wrap').style.display=mode==='md'?'block':'none';
+}
+function fmtCmd(c){document.execCommand(c,false,null);$('wysiwyg').focus();}
+function fmtBlock(tag){document.execCommand('formatBlock',false,tag);$('wysiwyg').focus();}
+function fmtLink(){var u=prompt('링크 URL','https://');if(u)document.execCommand('createLink',false,u);$('wysiwyg').focus();}
+function fmtInsert(kind){
+  var html=kind==='table'
+    ?'<table><thead><tr><th>항목</th><th>값</th></tr></thead><tbody><tr><td>　</td><td>　</td></tr></tbody></table><p>　</p>'
+    :'<p>🖼 [이미지 자리 — 실구현: addImageBlobHook → /api/posts/image (phase-3)]</p>';
+  document.execCommand('insertHTML',false,html);$('wysiwyg').focus();
+}
+// 저장: 스피너 → (예시로) sha 충돌 모달을 한 번씩 시연 가능하게 확률/토글
+var SAVE_DEMO=0;  // 0:성공, 1:sha충돌, 2:저장실패 — 순환 시연
+function doSave(thenPublish){
+  var btn=$('savebtn');if(!btn)return;
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> 저장 중…';
+  setTimeout(function(){
+    btn.disabled=false;btn.textContent='저장';
+    var mode=SAVE_DEMO%3;SAVE_DEMO++;
+    if(mode===1){ // sha 충돌 예외 모달
+      openModal('<h3>다른 곳에서 수정됨</h3>'+
+        '<p>이 글이 편집을 시작한 뒤 원격에서 변경되었습니다(sha 충돌). 어떻게 처리할까요?</p>'+
+        '<div class="diff">- title: LMS 도입 전 확인할 체크리스트\n+ title: LMS 도입 전 반드시 확인할 체크리스트 10가지</div>'+
+        '<div class="acts"><button class="btn" onclick="closeModal()">취소</button>'+
+        '<button class="btn" onclick="closeModal();toast(\'원격본을 새 탭에서 표시(목업)\')">원격본 보기</button>'+
+        '<button class="btn danger" onclick="closeModal();afterSave('+(thenPublish?'true':'false')+')">덮어쓰기(강제)</button></div>');
+      return;
+    }
+    if(mode===2){ // 저장 실패 → 재시도 + 임시저장 안내
+      openModal('<h3>저장에 실패했습니다</h3>'+
+        '<p>GitHub API 응답이 없습니다(타임아웃). 입력 내용은 <b>임시 보관</b>되었습니다(sessionStorage). 다시 시도하시겠어요?</p>'+
+        '<div class="acts"><button class="btn" onclick="closeModal()">닫기</button>'+
+        '<button class="btn primary" onclick="closeModal();doSave('+(thenPublish?'true':'false')+')">다시 시도</button></div>');
+      return;
+    }
+    afterSave(thenPublish);
+  },900);
+}
+function afterSave(thenPublish){
+  toast(thenPublish?'저장 후 게시됨 · 반영 대기중(빌드 중)':'저장됨 · 반영 대기중(빌드 중)','ok');
+  setTimeout(function(){location.hash='#/posts';},700);
+}
+
+/* =========================================================================
+   초기 부팅
+   ========================================================================= */
+// 새로고침해도 해시가 있으면 로그인은 유지 안 함(시안) — 항상 게이트부터.
+// 단, 개발 편의로 해시에 이미 라우트가 있으면 앱을 바로 띄운다.
+(function(){
+  if(location.hash&&location.hash!=='#/'&&location.hash!=='#'){
+    // 목업 편의: 해시로 직접 진입 시 게이트 스킵
+    enterApp();
+  }
+})();
+</script>
+</body>
+</html>
