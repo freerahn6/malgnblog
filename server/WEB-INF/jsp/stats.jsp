@@ -22,6 +22,34 @@
     return;
   }
 
+  // ?posts=1 → 글 메타 매니페스트(WEB-INF/posts.json)를 그대로 돌려준다.
+  //   서버의 Apache가 /api/ 를 통째로 프록시하지 않고 track/stats/update 만 개별 프록시하는
+  //   환경이라, 새 /api/posts 경로는 Apache 404가 난다. 이미 프록시되는 이 /api/stats 에
+  //   얹어 새 관리자 콘솔(/gamma2)이 매니페스트를 받도록 한다(같은 인증). posts.jsp 는
+  //   Apache가 blanket /api/ 로 갱신되면 쓸 수 있게 남겨둔다.
+  //   전체를 읽어 한 번에 출력한다(기본 버퍼 초과·중간 실패에도 안전).
+  if (request.getParameter("posts") != null) {
+    java.io.InputStream in = ctx.getResourceAsStream("/WEB-INF/posts.json");
+    if (in == null) { out.print("{\"count\":0,\"posts\":[]}"); return; }
+    java.io.Reader rd = null;
+    try {
+      rd = new java.io.InputStreamReader(in, "UTF-8");
+      StringBuilder sb = new StringBuilder(16384);
+      char[] cb = new char[8192];
+      int cn;
+      while ((cn = rd.read(cb)) != -1) sb.append(cb, 0, cn);
+      out.print(sb.toString());
+    } catch (Exception ex) {
+      ctx.log("[malgnblog] posts.json 읽기 실패: " + ex);
+      response.setStatus(503);
+      out.print("{\"error\":\"unavailable\"}");
+    } finally {
+      if (rd != null) { try { rd.close(); } catch (Exception ig) {} }
+      else { try { in.close(); } catch (Exception ig) {} }
+    }
+    return;
+  }
+
   java.util.Map<String, Long> m = store(ctx);
   String kst = todayKST();
 

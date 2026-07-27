@@ -256,7 +256,7 @@ function buildData(stats,manifest){
 function loadData(){
   return Promise.all([
     fetch('/api/stats?pw='+encodeURIComponent(PW)),
-    fetch('/api/posts?pw='+encodeURIComponent(PW))
+    fetch('/api/stats?pw='+encodeURIComponent(PW)+'&posts=1')
   ]).then(function(res){
     var sr=res[0],pr=res[1];
     if(sr.status===401||pr.status===401){var e=new Error('unauthorized');e.code=401;throw e;}
