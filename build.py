@@ -534,5 +534,15 @@ if os.path.isdir(_dst): _sh.rmtree(_dst)
 _sh.copytree(_srv,_dst)
 print("WEB-INF 동봉: 조회수 API(JSP)")
 
+# ---- 관리자 콘솔 고도화 시안(미리보기) 동봉 — /{ADMIN_PATH}/preview/ ----
+# admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 서버에 서빙한다.
+# 사이트 본체(articles)와 무관한 목업이며 파일 자체에 noindex,nofollow 메타가 있다.
+# 관리자 경로(ADMIN_PATH) 아래에 두어 외부 노출을 최소화한다.
+_mock=BASE+"/admin-console/시안-p2-관리자콘솔.html"
+if os.path.isfile(_mock):
+    os.makedirs(f"{OUT}/{ADMIN_PATH}/preview",exist_ok=True)
+    _sh.copyfile(_mock,f"{OUT}/{ADMIN_PATH}/preview/index.html")
+    print(f"관리자 콘솔 시안 동봉: /{ADMIN_PATH}/preview/")
+
 print("TOTAL articles:",len(arts))
 EOF=1
