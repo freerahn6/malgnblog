@@ -5,6 +5,9 @@ SITE="https://blog.malgnsoft.com"
 # 관리자 통계 대시보드 경로. 바꾸려면 여기 한 곳만 고치고, server/WEB-INF/jsp/track.jsp의
 # 집계 제외 조건도 같은 값으로 맞춘다(그쪽은 서버에서 도는 코드라 이 상수를 못 읽는다).
 ADMIN_PATH="gamma"
+# 새 관리자 콘솔(대시보드·통계·글관리) 경로. 기존 /gamma(통계 전용)와 공존한다.
+# "gamma2"는 "/gamma"로 시작하므로 아래 TRACK의 집계 제외 조건에 자동으로 걸린다(조회수 미집계).
+ADMIN2_PATH="gamma2"
 TRACK='<script>(function(){var p=location.pathname;if(p.indexOf("/'+ADMIN_PATH+'")===0)return;try{fetch("/api/track?p="+encodeURIComponent(p),{method:"POST",keepalive:true})}catch(e){}})();</script>'
 
 art_html=open(f"{PREV}/article.html",encoding='utf-8').read()
@@ -534,15 +537,15 @@ if os.path.isdir(_dst): _sh.rmtree(_dst)
 _sh.copytree(_srv,_dst)
 print("WEB-INF 동봉: 조회수 API(JSP)")
 
-# ---- 관리자 콘솔 고도화 시안(미리보기) 동봉 — /{ADMIN_PATH}/preview/ ----
-# admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 서버에 서빙한다.
-# 사이트 본체(articles)와 무관한 목업이며 파일 자체에 noindex,nofollow 메타가 있다.
-# 관리자 경로(ADMIN_PATH) 아래에 두어 외부 노출을 최소화한다.
+# ---- 새 관리자 콘솔(시안) 동봉 — /{ADMIN2_PATH}/ ----
+# admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 새 관리자 경로에 서빙한다.
+# 현재는 목업(가짜 데이터·백엔드 없음)이며, Phase 1~ 구현 시 이 자리를 실제 콘솔이 대체한다.
+# 파일 자체에 noindex,nofollow 메타가 있고 관리자 경로라 외부 노출은 최소.
 _mock=BASE+"/admin-console/시안-p2-관리자콘솔.html"
 if os.path.isfile(_mock):
-    os.makedirs(f"{OUT}/{ADMIN_PATH}/preview",exist_ok=True)
-    _sh.copyfile(_mock,f"{OUT}/{ADMIN_PATH}/preview/index.html")
-    print(f"관리자 콘솔 시안 동봉: /{ADMIN_PATH}/preview/")
+    os.makedirs(f"{OUT}/{ADMIN2_PATH}",exist_ok=True)
+    _sh.copyfile(_mock,f"{OUT}/{ADMIN2_PATH}/index.html")
+    print(f"새 관리자 콘솔(시안) 동봉: /{ADMIN2_PATH}/")
 
 print("TOTAL articles:",len(arts))
 EOF=1
