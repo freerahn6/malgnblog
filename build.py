@@ -80,7 +80,7 @@ def parse(fp):
     d={}
     for line in fm.split('\n'):
         mm=re.match(r'^([a-zA-Z_]+):\s*(.*)$',line)
-        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption','draft'):
+        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption','draft','updated'):
             v=mm.group(2).strip().strip('"').strip("'")
             d[mm.group(1)]=v
     # faq 블록 파싱 (q/a 쌍)
@@ -99,12 +99,17 @@ def parse(fp):
 
 arts=[]
 _drafts=[]
+_allarts=[]   # 발행+비게시 전부. 관리자 콘솔(/gamma2) 매니페스트 전용. 사이트 출력엔 쓰지 않는다.
 for fn in os.listdir(ART):
     if fn.endswith('.md'):
         d=parse(f"{ART}/{fn}"); d['file']=fn
-        # draft: true 인 글은 빌드에서 완전히 제외한다(페이지·목록·sitemap·rss 모두).
-        # 파일은 그대로 두고 플래그만 지우면 복구된다.
-        if str(d.get('draft','')).split('#')[0].strip().lower()=='true':
+        # draft: true 인 글은 사이트 출력(페이지·목록·sitemap·rss)에서 완전히 제외한다.
+        # 단 관리자 콘솔용 메타는 남겨야 하므로 _allarts 에는 담고, arts 에서만 뺀다.
+        # (arts 는 아래 모든 사이트 생성이 참조하는 발행글 목록 — 의미가 바뀌면 안 된다)
+        is_draft = str(d.get('draft','')).split('#')[0].strip().lower()=='true'
+        d['is_draft']=is_draft
+        _allarts.append(d)
+        if is_draft:
             _drafts.append(d.get('slug',fn)); continue
         arts.append(d)
 if _drafts:
@@ -536,6 +541,32 @@ _dst=f"{OUT}/WEB-INF"
 if os.path.isdir(_dst): _sh.rmtree(_dst)
 _sh.copytree(_srv,_dst)
 print("WEB-INF 동봉: 조회수 API(JSP)")
+
+# ---- 관리자 콘솔(/gamma2) 매니페스트 posts.json ----
+# 발행글 + 비게시(draft)글 '메타만' 모아 웹루트 WEB-INF 안에 쓴다.
+#  · WEB-INF copytree '이후'에 써야 덮이지 않는다(위 rmtree/copytree가 먼저 도는 이유).
+#  · WEB-INF 아래라 브라우저 직접 URL로는 못 읽는다 → /api/posts(JSP)가 비번 확인 뒤 서빙.
+#  · draft 글의 제목·존재는 여기에만 있고 사이트 출력엔 없다 → 인증 없이는 노출 불가.
+#  · 조회수는 넣지 않는다. 클라이언트가 /api/stats 의 posts[].path 와 이 path 로 조인한다.
+#    → path 는 반드시 track.jsp 가 기록하는 pathname 형식 "/{cat}/{slug}/"(앞뒤 슬래시) 여야 조인된다.
+_manifest_posts=[]
+for _d in sorted(_allarts,key=lambda a:a.get('date',''),reverse=True):
+    _cat=_d.get('category',''); _slug=_d.get('slug','')
+    _manifest_posts.append({
+        "path": f"/{_cat}/{_slug}/",
+        "title": _d.get('title',''),
+        "category": _cat,
+        "author": author_of(_d)[0],
+        "date": _d.get('date',''),
+        "updated": (_d.get('updated') or _d.get('date','')),
+        "funnel": _d.get('funnel',''),
+        "slug": _slug,
+        "draft": bool(_d.get('is_draft')),
+    })
+_gen=(_dt.datetime.utcnow()+_dt.timedelta(hours=9)).strftime('%Y-%m-%d %H:%M:%S')+' KST'
+_manifest={"generated":_gen,"count":len(_manifest_posts),"posts":_manifest_posts}
+open(f"{_dst}/posts.json",'w',encoding='utf-8').write(json.dumps(_manifest,ensure_ascii=False))
+print("posts.json 매니페스트:",len(_manifest_posts),"posts(비게시 포함) ->",f"{_dst}/posts.json")
 
 # ---- 새 관리자 콘솔(시안) 동봉 — /{ADMIN2_PATH}/ ----
 # admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 새 관리자 경로에 서빙한다.

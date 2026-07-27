@@ -84,6 +84,16 @@
     <url-pattern>/api/update</url-pattern>
   </servlet-mapping>
 
+  <!-- 새 관리자 콘솔(/gamma2)용 글 메타 매니페스트. 비밀번호 확인 후 /WEB-INF/posts.json 서빙. -->
+  <servlet>
+    <servlet-name>posts</servlet-name>
+    <jsp-file>/WEB-INF/jsp/posts.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>posts</servlet-name>
+    <url-pattern>/api/posts</url-pattern>
+  </servlet-mapping>
+
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
     <welcome-file>index.jsp</welcome-file>
