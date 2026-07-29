@@ -28,6 +28,35 @@ BANL=open(_D+'/wecandeo_datauri.txt',encoding='utf-8').read().strip()
 BANR=open(_D+'/malgnsoft_datauri.txt',encoding='utf-8').read().strip()
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
 BAN_RIGHT=f'<aside class="rail"><a href="https://www.malgnsoft.com" target="_blank" rel="noopener"><img src="{BANR}" alt="맑은소프트"></a></aside>'
+# 모바일 햄버거 메뉴. 본문 CSS(_preview)는 좁은 화면에서 nav.main을 그냥 숨겨버리므로
+# 여기서 1000px 이하 공통 규칙으로 덮어쓰고(글=1000px·홈=900px로 갈리던 것도 통일) 드로어를 연다.
+# 드로어는 header.site(position:sticky = 포지셔닝 조상) 기준 absolute라 헤더 바로 아래에 붙는다.
+MOBILE_NAV_CSS=('.navtoggle{display:none;align-items:center;justify-content:center;flex:none;width:42px;height:42px;'
+ 'padding:0;background:transparent;border:1px solid var(--border);border-radius:10px;cursor:pointer;color:var(--text)}'
+ '.navtoggle span{display:block;width:18px;height:2px;background:currentColor;border-radius:2px;transition:transform .2s,opacity .2s}'
+ '.navtoggle span+span{margin-top:4px}'
+ '.navtoggle:focus-visible{outline:3px solid var(--accent);outline-offset:2px}'
+ '@media (max-width:1000px){'
+ 'header.site .wrap{gap:10px}'
+ '.navtoggle{display:flex;order:9;margin-left:6px}'
+ 'header.site .wrap .cta-btn{margin-left:auto}'
+ 'nav.main{display:none}'
+ 'body.nav-open nav.main{display:flex;position:absolute;top:100%;left:0;right:0;z-index:5;'
+ 'flex-direction:column;gap:0;padding:6px 18px 12px;font-size:15.5px;'
+ 'background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--shadow);'
+ 'max-height:calc(100vh - 66px);overflow-y:auto;-webkit-overflow-scrolling:touch}'
+ 'body.nav-open nav.main a{padding:13px 10px;border-bottom:1px solid var(--border);'
+ 'border-left:2px solid transparent;border-radius:0 8px 8px 0}'
+ 'body.nav-open nav.main a:last-child{border-bottom:0}'
+ 'body.nav-open nav.main a.active{color:var(--accent);background:var(--accent-soft);'
+ 'border-bottom-color:var(--border);border-left-color:var(--accent)}'
+ 'body.nav-open .navtoggle span:nth-child(1){transform:translateY(6px) rotate(45deg)}'
+ 'body.nav-open .navtoggle span:nth-child(2){opacity:0}'
+ 'body.nav-open .navtoggle span:nth-child(3){transform:translateY(-6px) rotate(-45deg)}'
+ '}'
+ '@media (max-width:400px){.cta-btn{padding:8px 11px;font-size:12.5px}header.site .wrap{gap:8px}}'
+ '@media (prefers-reduced-motion:reduce){.navtoggle span{transition:none}}')
+
 EXTRA_CSS=('.wrap{max-width:1320px}'
  '.article-shell{grid-template-columns:176px minmax(0,1fr) 176px;gap:44px}'
  '.doc{min-width:0;overflow:hidden}'
@@ -54,17 +83,28 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  '.recentlist .rl-title{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
  '.recentlist .rl-date{flex:none;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}'
  '@media (max-width:560px){.recentlist .rl-cat{display:none}.recentlist .rl-title{white-space:normal}}'
- '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}')
+ '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}'
+ +MOBILE_NAV_CSS)
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
 # 상단 메뉴 단일 출처: (키, 라벨, URL). 키는 활성표시 판별용(카테고리는 CATL 키와 일치)
 NAV_ITEMS=[('home','홈','/'),('all','전체보기','/all/'),('lms','LMS·이러닝','/lms/'),('hrd','기업교육·HRD','/hrd/'),('certification','자격검정','/certification/'),('video','동영상·콘텐츠','/video/'),('edutech','에듀테크','/edutech/')]
+NAV_JS=('<script>(function(){var b=document.getElementById("mnavbtn"),n=document.getElementById("mnav");'
+ 'if(!b||!n)return;var B=document.body;'
+ 'function set(o){B.classList.toggle("nav-open",o);b.setAttribute("aria-expanded",o?"true":"false");'
+ 'b.setAttribute("aria-label",o?"메뉴 닫기":"메뉴 열기")}'
+ 'b.addEventListener("click",function(e){e.stopPropagation();set(!B.classList.contains("nav-open"))});'
+ 'document.addEventListener("click",function(e){if(B.classList.contains("nav-open")&&!n.contains(e.target))set(false)});'
+ 'document.addEventListener("keydown",function(e){if(e.key==="Escape"||e.key==="Esc"){if(B.classList.contains("nav-open")){set(false);b.focus()}}});'
+ 'window.addEventListener("resize",function(){if(window.innerWidth>1000)set(false)});})();</script>')
 def navhtml(active=''):
     out=[]
     for k,lab,u in NAV_ITEMS:
         cls=' class="active"' if k==active else ''
         out.append(f'<a href="{u}"{cls}>{lab}</a>')
-    return '<nav class="main">'+''.join(out)+'</nav>'
+    return ('<button type="button" class="navtoggle" id="mnavbtn" aria-label="메뉴 열기" aria-expanded="false" '
+            'aria-controls="mnav"><span></span><span></span><span></span></button>'
+            '<nav class="main" id="mnav">'+''.join(out)+'</nav>'+NAV_JS)
 AUTHORS={'안기범':('팀장','TEAM LEAD','AN GI-BEOM','👨‍💼'),'강이슬':('과장','MANAGER','KANG I-SEUL','👩‍💼'),'이채영':('대리','ASSISTANT MANAGER','LEE CHAE-YEONG','👩‍💻'),'한다현':('대리','ASSISTANT MANAGER','HAN DA-HYEON','👩‍🏫')}
 def author_of(a):
     n=a.get('author','교육운영 노트'); r,re_,en,em=AUTHORS.get(n,('','','','✍️')); return n,r,re_,en,em
@@ -245,7 +285,8 @@ HOME_EXTRA=('.wrap{max-width:1320px}'
  '.rail-left .side-banner img,.home-shell .rail img{width:100%;height:auto;display:block}'
  '@media (max-width:1000px){.home-shell{grid-template-columns:1fr}.rail-left,.home-shell .rail{display:none}}'
  '@media (max-width:900px){.home-shell .grid{grid-template-columns:repeat(2,1fr)}}'
- '@media (max-width:560px){.home-shell .grid{grid-template-columns:1fr}}')
+ '@media (max-width:560px){.home-shell .grid{grid-template-columns:1fr}}'
+ +MOBILE_NAV_CSS)
 ALL_LIST_CSS=('.alllist{margin:8px 0}'
  '.alllist ul{list-style:none;margin:0;padding:0;border-top:2px solid var(--border-strong)}'
  '.alllist li{border-bottom:1px solid var(--border)}'
