@@ -57,6 +57,11 @@ MOBILE_NAV_CSS=('.navtoggle{display:none;align-items:center;justify-content:cent
  '@media (max-width:400px){.cta-btn{padding:8px 11px;font-size:12.5px}header.site .wrap{gap:8px}}'
  '@media (prefers-reduced-motion:reduce){.navtoggle span{transition:none}}')
 
+# 메뉴 항목이 6개 카테고리 전체로 늘어나(news 포함) 햄버거 전환선(1000px) 바로 위 구간이 빡빡해진다.
+# 그 구간에서만 간격·글자를 조여 한 줄을 유지한다. 넓은 화면의 기존 여백감은 건드리지 않는다.
+NAV_FIT_CSS=('@media (min-width:1001px) and (max-width:1240px){'
+ 'nav.main{gap:13px;font-size:13.5px}header.site .wrap{gap:16px}}')
+
 EXTRA_CSS=('.wrap{max-width:1320px}'
  '.article-shell{grid-template-columns:176px minmax(0,1fr) 176px;gap:44px}'
  '.doc{min-width:0;overflow:hidden}'
@@ -84,11 +89,15 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  '.recentlist .rl-date{flex:none;font-size:12.5px;color:var(--faint);font-variant-numeric:tabular-nums}'
  '@media (max-width:560px){.recentlist .rl-cat{display:none}.recentlist .rl-title{white-space:normal}}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}'
- +MOBILE_NAV_CSS)
+ +MOBILE_NAV_CSS+NAV_FIT_CSS)
 
 CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
-# 상단 메뉴 단일 출처: (키, 라벨, URL). 키는 활성표시 판별용(카테고리는 CATL 키와 일치)
-NAV_ITEMS=[('home','홈','/'),('all','전체보기','/all/'),('lms','LMS·이러닝','/lms/'),('hrd','기업교육·HRD','/hrd/'),('certification','자격검정','/certification/'),('video','동영상·콘텐츠','/video/'),('edutech','에듀테크','/edutech/')]
+# 상단 메뉴는 CATL에서 파생한다: (키, 라벨, URL). 키는 활성표시 판별용.
+# 예전에는 카테고리를 여기에 손으로 다시 적었고, 그 결과 news(맑은소프트 소식)가 통째로 빠지고
+# edutech 라벨만 '에듀테크'로 갈려 있었다. 글 URL·빵부스러기·카드 뱃지는 CATL을 쓰므로
+# 독자는 메뉴에 없는 카테고리를 만나게 된다. 파생으로 바꿔 재발을 막는다. (2026-07-31)
+# 실제 허브 페이지가 생기는 카테고리만 남기는 필터는 arts 파싱 직후에 적용한다.
+NAV_ITEMS=[('home','홈','/'),('all','전체보기','/all/')]+[(k,CATL[k],f'/{k}/') for k in CATL]
 NAV_JS=('<script>(function(){var b=document.getElementById("mnavbtn"),n=document.getElementById("mnav");'
  'if(!b||!n)return;var B=document.body;'
  'function set(o){B.classList.toggle("nav-open",o);b.setAttribute("aria-expanded",o?"true":"false");'
@@ -157,6 +166,12 @@ if _drafts:
 # order by date
 arts.sort(key=lambda a:a.get('date',''))
 bysl={a['slug']:a for a in arts}
+
+# 상단 메뉴 = 실제로 허브 페이지가 만들어지는 카테고리(발행글 1편 이상)만.
+# 아래 카테고리 허브 생성 루프의 조건(`if not cat_arts: continue`)과 같은 기준이라
+# "메뉴에 있는데 404" / "글은 있는데 메뉴에 없음"이 둘 다 생길 수 없다.
+_navcats={a['category'] for a in arts}
+NAV_ITEMS=[it for it in NAV_ITEMS if it[0] in ('home','all') or it[0] in _navcats]
 
 def _collapse_blanks(m): return re.sub(r'\n[ \t]*\n+','\n',m.group(0))
 def prep_html_blocks(body):
@@ -286,7 +301,7 @@ HOME_EXTRA=('.wrap{max-width:1320px}'
  '@media (max-width:1000px){.home-shell{grid-template-columns:1fr}.rail-left,.home-shell .rail{display:none}}'
  '@media (max-width:900px){.home-shell .grid{grid-template-columns:repeat(2,1fr)}}'
  '@media (max-width:560px){.home-shell .grid{grid-template-columns:1fr}}'
- +MOBILE_NAV_CSS)
+ +MOBILE_NAV_CSS+NAV_FIT_CSS)
 ALL_LIST_CSS=('.alllist{margin:8px 0}'
  '.alllist ul{list-style:none;margin:0;padding:0;border-top:2px solid var(--border-strong)}'
  '.alllist li{border-bottom:1px solid var(--border)}'
