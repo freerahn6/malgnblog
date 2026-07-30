@@ -91,7 +91,8 @@ EXTRA_CSS=('.wrap{max-width:1320px}'
  '@media (max-width:1000px){.article-shell{grid-template-columns:1fr}aside.rail,.rail-left{display:none}}'
  +MOBILE_NAV_CSS+NAV_FIT_CSS)
 
-CATL={'lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI','news':'맑은소프트 소식'}
+# 정의 순서 = 상단 메뉴 순서(홈·전체보기 다음). 순서를 바꾸려면 이 dict의 순서만 바꾼다.
+CATL={'news':'맑은소프트 소식','lms':'LMS·이러닝','hrd':'기업교육·HRD','certification':'자격검정','video':'동영상·콘텐츠','edutech':'에듀테크·AI'}
 # 상단 메뉴는 CATL에서 파생한다: (키, 라벨, URL). 키는 활성표시 판별용.
 # 예전에는 카테고리를 여기에 손으로 다시 적었고, 그 결과 news(맑은소프트 소식)가 통째로 빠지고
 # edutech 라벨만 '에듀테크'로 갈려 있었다. 글 URL·빵부스러기·카드 뱃지는 CATL을 쓰므로
