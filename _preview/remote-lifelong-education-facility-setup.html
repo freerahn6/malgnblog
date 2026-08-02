@@ -1,0 +1,394 @@
+<title>교육운영 노트 — 원격평생교육시설 설립과 인가 (미리보기)</title>
+<style>
+  :root{
+    --bg:#FBFBFD; --surface:#FFFFFF; --surface-2:#F4F6FA;
+    --text:#1A2230; --muted:#5A6577; --faint:#8A93A6;
+    --border:#E3E7EF; --border-strong:#D2D8E4;
+    --accent:#1D4ED8; --accent-ink:#16337A; --chip-bg:#EAF0FE;
+    --figure-bg:#FFFFFF; --figure-border:#E3E7EF;
+    --serp-title:#1a0dab; --serp-url:#4b5563; --serp-desc:#4d5562;
+    --good:#0f7b4f; --good-bg:#e6f4ec;
+    --radius:14px;
+    --measure:42rem;
+    --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0E131E; --surface:#151C2A; --surface-2:#1B2333;
+      --text:#E7EBF3; --muted:#9AA6BC; --faint:#6E7A92;
+      --border:#263149; --border-strong:#33415C;
+      --accent:#6B9BFF; --accent-ink:#A9C4FF; --chip-bg:#1A2540;
+      --figure-bg:#F3F6FC; --figure-border:#33415C;
+      --serp-title:#8ab4f8; --serp-url:#9aa6bc; --serp-desc:#c3ccdb;
+      --good:#4ecb8b; --good-bg:#12321f;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FBFBFD; --surface:#FFFFFF; --surface-2:#F4F6FA;
+    --text:#1A2230; --muted:#5A6577; --faint:#8A93A6;
+    --border:#E3E7EF; --border-strong:#D2D8E4;
+    --accent:#1D4ED8; --accent-ink:#16337A; --chip-bg:#EAF0FE;
+    --figure-bg:#FFFFFF; --figure-border:#E3E7EF;
+    --serp-title:#1a0dab; --serp-url:#4b5563; --serp-desc:#4d5562;
+    --good:#0f7b4f; --good-bg:#e6f4ec;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E131E; --surface:#151C2A; --surface-2:#1B2333;
+    --text:#E7EBF3; --muted:#9AA6BC; --faint:#6E7A92;
+    --border:#263149; --border-strong:#33415C;
+    --accent:#6B9BFF; --accent-ink:#A9C4FF; --chip-bg:#1A2540;
+    --figure-bg:#F3F6FC; --figure-border:#33415C;
+    --serp-title:#8ab4f8; --serp-url:#9aa6bc; --serp-desc:#c3ccdb;
+    --good:#4ecb8b; --good-bg:#12321f;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+    line-height:1.7;font-size:17px;letter-spacing:-0.003em;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:var(--measure);margin:0 auto;padding:0 20px}
+
+  .banner{background:var(--accent);color:#fff;font-size:12.5px;letter-spacing:.02em;
+    text-align:center;padding:7px 16px;font-weight:600}
+  .banner b{font-weight:700}
+  @media (prefers-color-scheme:dark){.banner{color:#0b1220}}
+  :root[data-theme="dark"] .banner{color:#0b1220}
+  :root[data-theme="light"] .banner{color:#fff}
+
+  header.site{border-bottom:1px solid var(--border);background:var(--surface)}
+  header.site .wrap{display:flex;align-items:baseline;gap:12px;padding-top:18px;padding-bottom:18px}
+  .wordmark{font-weight:800;font-size:20px;letter-spacing:-0.02em;color:var(--text)}
+  .wordmark .by{font-weight:500;font-size:13px;color:var(--muted);margin-left:2px}
+  .nav{margin-left:auto;display:flex;gap:16px;font-size:13.5px;color:var(--muted)}
+  .nav span{white-space:nowrap}
+
+  main{padding:34px 0 10px}
+
+  .serp-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 10px}
+  .serp{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin-bottom:34px}
+  .serp .fav{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+  .serp .fav .dot{width:26px;height:26px;border-radius:50%;background:var(--chip-bg);
+    display:flex;align-items:center;justify-content:center;font-size:14px}
+  .serp .fav .site{font-size:12.5px;line-height:1.25}
+  .serp .fav .site b{display:block;color:var(--text);font-weight:600}
+  .serp .fav .site span{color:var(--serp-url)}
+  .serp h3{margin:2px 0 3px;font-size:20px;line-height:1.3;font-weight:500;color:var(--serp-title)}
+  .serp p{margin:0;font-size:14px;color:var(--serp-desc);line-height:1.58}
+  .serp .date{color:var(--faint)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .chip{font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;
+    background:var(--chip-bg);color:var(--accent-ink);letter-spacing:.01em}
+  .chip.ghost{background:transparent;border:1px solid var(--border-strong);color:var(--muted)}
+  h1.title{font-size:34px;line-height:1.25;letter-spacing:-0.025em;font-weight:800;
+    margin:0 0 14px;text-wrap:balance}
+  .dek{font-size:18px;color:var(--muted);margin:0 0 20px;line-height:1.6}
+  .byline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+    padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    font-size:13.5px;color:var(--muted);margin-bottom:8px}
+  .byline .who{font-weight:600;color:var(--text)}
+  .byline .sep{width:3px;height:3px;border-radius:50%;background:var(--faint)}
+  .byline .num{font-variant-numeric:tabular-nums}
+
+  article{padding-top:22px}
+  article h2{font-size:24px;line-height:1.3;letter-spacing:-0.02em;font-weight:750;
+    margin:42px 0 14px;padding-top:6px;text-wrap:balance}
+  article h3{font-size:18.5px;font-weight:700;margin:28px 0 10px;color:var(--text)}
+  article p{margin:0 0 18px}
+  article strong{font-weight:700;color:var(--text)}
+  article a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+  article a:hover{border-bottom-color:var(--accent)}
+  article ul{margin:0 0 18px;padding-left:2px;list-style:none;display:flex;flex-direction:column;gap:11px}
+  article ul li{position:relative;padding-left:20px}
+  article ul li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;
+    border-radius:2px;background:var(--accent);transform:rotate(45deg)}
+  article ol{margin:0 0 18px;padding-left:22px;display:flex;flex-direction:column;gap:11px}
+  article ol li{padding-left:4px}
+
+  .hero-img{margin:22px 0 6px;display:flex;flex-direction:column;gap:10px}
+  .hero-img img{width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--border);display:block;aspect-ratio:1000/545;object-fit:cover}
+  .hero-img figcaption{font-size:13.5px;color:var(--muted);line-height:1.55;padding-left:2px}
+  figure{margin:26px 0;display:flex;flex-direction:column;gap:10px}
+  .figbox{background:var(--figure-bg);border:1px solid var(--figure-border);border-radius:var(--radius);
+    padding:20px;overflow-x:auto}
+  .figbox svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  figcaption{font-size:13.5px;color:var(--muted);line-height:1.55;padding-left:2px}
+
+  .twrap{overflow-x:auto;margin:24px 0;border:1px solid var(--border);border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+  caption{caption-side:top;text-align:left;font-size:13px;font-weight:700;color:var(--muted);
+    padding:14px 16px 0;letter-spacing:.01em}
+  thead th{background:var(--surface-2);text-align:left;font-weight:700;font-size:13.5px;
+    color:var(--text);padding:12px 16px;border-bottom:2px solid var(--border-strong)}
+  tbody td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody td strong{color:var(--text)}
+
+  .cta{background:linear-gradient(180deg,var(--surface-2),var(--surface));
+    border:1px solid var(--border);border-left:4px solid var(--accent);
+    border-radius:12px;padding:18px 20px;margin:30px 0;font-size:16px;color:var(--text)}
+
+  .faq{margin:44px 0 10px;border-top:2px solid var(--border-strong);padding-top:8px}
+  .faq h2{margin-top:24px}
+  details{border-bottom:1px solid var(--border);padding:4px 0}
+  summary{cursor:pointer;list-style:none;padding:15px 30px 15px 4px;position:relative;
+    font-weight:650;font-size:16.5px;color:var(--text)}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    font-size:22px;font-weight:400;color:var(--accent);transition:transform .2s}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 4px 16px;color:var(--muted);font-size:15.5px;line-height:1.7}
+
+  footer.site{border-top:1px solid var(--border);color:var(--faint);font-size:12.5px;
+    padding:22px 0 40px;text-align:center}
+
+  @media (max-width:560px){
+    body{font-size:16px}
+    h1.title{font-size:27px}
+    article h2{font-size:21px}
+    .nav{display:none}
+  }
+</style>
+
+<div class="banner">미리보기 &nbsp;·&nbsp; <b>blog.malgnsoft.com</b> &nbsp;·&nbsp; 도메인 연결 전 정적 렌더 — 원격평생교육시설 설립 가이드 (신규)</div>
+
+<header class="site">
+  <div class="wrap">
+    <span class="wordmark">교육운영 노트<span class="by">by 맑은소프트</span></span>
+    <nav class="nav" aria-hidden="true">
+      <span>LMS·이러닝</span><span>기업교육·HRD</span><span>자격검정</span><span>에듀테크</span>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section aria-label="구글 검색 노출 미리보기">
+    <p class="serp-label">구글 검색 노출 미리보기</p>
+    <div class="serp">
+      <div class="fav">
+        <span class="dot">🎓</span>
+        <span class="site"><b>교육운영 노트</b><span>https://blog.malgnsoft.com › lms › remote-lifelong-education-facility-setup</span></span>
+      </div>
+      <h3>원격평생교육시설 설립과 인가, 신고 요건부터 LMS 준비까지</h3>
+      <p><span class="date">2026. 8. 2. — </span>원격평생교육원 설립을 검토하는 기관을 위해 원격평생교육시설의 신고 대상 요건, 평생교육사 배치, 제출서류, 신고 절차를 평생교육법 기준으로 정리하고, 신고 이후 원격교육을 실제로 굴릴 LMS에서 무엇을 준비해야 하는지까지 짚습니다.</p>
+    </div>
+  </section>
+
+  <article>
+    <div class="chips">
+      <span class="chip">LMS·이러닝 구축/운영</span>
+      <span class="chip ghost">실무 · MOFU</span>
+      <span class="chip ghost">클러스터 A</span>
+    </div>
+    <h1 class="title">원격평생교육시설 설립과 인가, 신고 요건부터 LMS 준비까지</h1>
+    <p class="dek">원격평생교육원을 열려면 인가를 받아야 할까요, 신고를 하면 될까요? 신고 대상 판단부터 평생교육사·서류·절차, 그리고 신고 이후 원격교육을 굴릴 시스템까지 순서대로 정리합니다.</p>
+    <div class="byline">
+      <span class="who">교육운영 노트 by 맑은소프트</span>
+      <span class="sep"></span><span class="num">2026-08-02</span>
+      <span class="sep"></span><span>읽는 시간 약 8분</span>
+      <span class="sep"></span><span>타깃 키워드 · “원격평생교육시설 설립”</span>
+    </div>
+
+    <figure class="hero-img">
+      <img src="file:///C:/Users/%EB%8F%99%EB%8F%99/Desktop/temp/%EC%9D%B4%EB%9F%AC%EB%8B%9D.jpg" alt="원격평생교육시설 설립과 인가, 신고 요건부터 LMS 준비까지">
+      <figcaption>정보통신매체로 불특정 다수에게 원격교육을 실시하는 원격평생교육시설의 설립은 인가가 아니라 관할 교육청 신고 대상이다.</figcaption>
+    </figure>
+
+    <div class="article-body">
+      <p>원격으로 강좌를 팔려면 홈페이지와 동영상만 있으면 될 것 같지만, 유료로 불특정 다수를 가르치는 순간 제도가 먼저 개입합니다. <strong>원격평생교육시설이란 정보통신매체를 이용해 불특정 다수인에게 원격교육을 실시하는 평생교육시설</strong>로, 평생교육법 제33조는 이 시설을 관할 교육감에게 신고하도록 하고 있습니다. 그리고 여기서 첫 오해가 갈립니다. 많은 분들이 “원격평생교육원 인가를 받아야 한다”고 말하지만, 일반적인 원격교육 강좌를 운영하는 기관은 <strong>인가가 아니라 신고 대상</strong>입니다.</p>
+
+      <p>이 글은 원격평생교육원 설립을 검토하는 단계의 담당자를 위해, 무엇을 확인하고 무엇을 준비해 어떤 순서로 신고하는지, 그리고 신고가 끝난 뒤 원격교육을 실제로 굴리려면 어떤 시스템이 필요한지까지를 하나의 지도로 정리한 것입니다. 제도는 개정될 수 있으므로 아래 내용은 발행 시점(2026년 8월) 기준이며, 실제 진행 전에는 관할 시·도교육청(교육지원청)과 평생교육법령을 반드시 확인하시기 바랍니다.</p>
+
+      <h2>원격평생교육시설은 '인가'가 아니라 '신고'다</h2>
+      <p>가장 먼저 바로잡아야 할 지점이 여기 있습니다. 원격으로 교육을 제공하는 평생교육시설에는 성격이 다른 두 층위가 있습니다.</p>
+      <p>평생교육법 제33조는 <strong>원격교육형태의 평생교육시설</strong>과 <strong>원격대학형태의 평생교육시설</strong>을 구분합니다. 앞의 것은 정보통신매체로 불특정 다수인에게 원격교육을 실시하는 시설로, 학력·학위를 인정하지 않으며 관할 교육감에게 <strong>신고</strong>합니다. 뒤의 것은 전문대학 또는 대학 졸업자와 동등한 학력·학위를 인정하는 시설로, 교육부장관 <strong>인가</strong>라는 훨씬 높은 규제를 받습니다. 우리가 흔히 말하는 “원격평생교육원”, 즉 유료 온라인 강좌를 운영하는 대다수 기관은 앞쪽, 신고 대상에 해당합니다.</p>
+
+      <div class="twrap">
+        <table>
+          <caption>[표 1] 원격교육형태와 원격대학형태 평생교육시설 비교 (평생교육법 제33조 기준, 발행 시점)</caption>
+          <thead>
+            <tr><th>구분</th><th>원격교육형태 평생교육시설</th><th>원격대학형태 평생교육시설</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>성격</strong></td><td>정보통신매체로 불특정 다수에게 원격교육 실시</td><td>대학·전문대학 학력·학위를 인정하는 원격대학</td></tr>
+            <tr><td><strong>학력·학위</strong></td><td>인정하지 않음(수료·자격 등 자체 발급)</td><td>졸업자에게 학사·전문학사 학위 인정</td></tr>
+            <tr><td><strong>절차</strong></td><td>신고</td><td>인가</td></tr>
+            <tr><td><strong>관할</strong></td><td>관할 교육감(시·도교육청·교육지원청)</td><td>교육부장관</td></tr>
+            <tr><td><strong>해당 예</strong></td><td>유료 온라인 강좌·직무교육·취미교양 원격교육원</td><td>사이버대학 등 학위과정 운영기관</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>기관 내부 회의에서 “우리도 인가 받아야 하는 거 아니냐”는 질문이 나오면, 이 표를 먼저 보여 주는 편이 빠릅니다. 학위를 줄 것인지 아닌지가 두 길을 가릅니다. 학위과정이 아니라면 우리가 준비할 것은 인가가 아니라 신고이고, 아래 내용은 그 신고를 전제로 합니다.</p>
+
+      <h2>우리가 신고 대상인지부터: 네 가지 요건</h2>
+      <p>신고 서류를 준비하기 전에, 애초에 신고 대상에 해당하는지를 먼저 판단해야 합니다. 정보통신매체를 이용하더라도 조건이 맞지 않으면 신고 대상이 아니거나, 반대로 다른 법(학원법 등)의 적용을 받을 수 있기 때문입니다. 여러 교육지원청 안내가 공통으로 드는 원격교육형태 평생교육시설의 요건은 대체로 다음 네 가지가 함께 충족되는 경우입니다.</p>
+
+      <div class="twrap">
+        <table>
+          <caption>[표 2] 원격교육형태 평생교육시설 신고 대상 요건 (교육지원청 안내 기준, 발행 시점)</caption>
+          <thead>
+            <tr><th>요건</th><th>내용</th><th>담당자가 확인할 점</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>학습비 수취</strong></td><td>학습비를 받고 원격교육을 실시(사용료·수수료·통신료는 학습비로 보지 않음)</td><td>무료 콘텐츠만 제공하면 성격이 달라질 수 있음</td></tr>
+            <tr><td><strong>불특정 다수 대상</strong></td><td>특정 회원이 아닌 불특정 다수인(성인)을 대상으로 함</td><td>사내 임직원만 대상이면 판단이 달라짐</td></tr>
+            <tr><td><strong>학습자 규모·시간</strong></td><td>10인 이상을 대상으로 교육과정이 30시간 이상</td><td>단기 특강 위주면 요건 충족 여부 확인 필요</td></tr>
+            <tr><td><strong>정보통신매체 이용</strong></td><td>인터넷강의·화상강의 등 정보통신기술을 활용한 원격교육</td><td>오프라인 병행 시 별도 시설 신고가 따로 필요할 수 있음</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>여기서 실무적으로 자주 걸리는 지점은 ‘10인 이상, 30시간 이상’과 ‘학원법과의 경계’입니다. 학교 교과를 가르치는 온라인 학원이나 학원법상 원격학원은 원격평생교육시설이 아니라 학원법의 적용을 받는 것으로 해석되어 온 사례가 있습니다. 우리 강좌가 어느 쪽으로 분류되는지는 교습 내용과 대상에 따라 갈리므로, 종목을 확정하기 전에 관할 교육지원청에 사전 문의해 성격을 먼저 확인하는 것이 안전합니다. 요건과 경계는 발행 시점 기준이며, 평생교육법과 같은 법 시행령·시행규칙 및 관할청 판단에 따라 달라질 수 있습니다.</p>
+
+      <h2>설립 전 첫 관문: 결격사유와 평생교육사</h2>
+      <p>요건을 충족하더라도, 설치자가 될 수 없는 경우가 있고 반드시 두어야 하는 인력이 있습니다. 이 두 가지는 서류를 만들기 전에 먼저 점검해야 뒤가 꼬이지 않습니다.</p>
+
+      <h3>설치자 결격사유</h3>
+      <p>평생교육시설을 설치할 수 없는 결격사유가 정해져 있습니다. 여러 교육청 안내가 공통으로 드는 사유는 피성년후견인 또는 피한정후견인, 금고 이상의 실형을 선고받고 일정 기간(대체로 3년)이 지나지 않은 자, 금고 이상의 형의 집행유예 기간 중인 자, 법원 판결로 자격이 정지·상실된 자, 평생교육 인가·등록이 취소되거나 시설이 폐쇄된 후 일정 기간이 지나지 않은 자 등입니다. 법인이 설치자라면 <strong>임원 중 한 명이라도 이 사유에 해당하면 걸린다</strong>는 점이 중요합니다. 이사회 구성이 자주 바뀌는 단체라면 신고 시점의 임원 명부를 기준으로 미리 점검해 두는 편이 좋습니다.</p>
+
+      <h3>평생교육사 배치</h3>
+      <p>원격교육형태 평생교육시설도 <strong>평생교육사를 두어야 합니다.</strong> 여러 교육지원청 안내는 자격증 등급(1~3급)과 관계없이 최소 1명 이상의 평생교육사를 배치하도록 안내하고 있고, 신고 서류에 자격증 사본과 함께 근로계약서 또는 재직증명서를 요구합니다. 즉 이름만 빌려 등재하는 방식이 아니라 실제 채용을 확인하는 구조입니다. 평생교육사 채용은 사람을 구하는 데 시간이 걸리는 항목이므로, 신고 일정을 잡을 때 가장 먼저 착수해야 할 준비물 중 하나입니다. 세부 배치 기준은 관할청과 발행 시점 법령을 확인하시기 바랍니다.</p>
+
+      <h2>무엇을 준비해 신고하나: 서류와 시설 요건</h2>
+      <p>신고는 결국 “우리는 이런 시설과 인력, 이런 운영규칙으로 원격교육을 하겠다”는 것을 문서로 증명하는 절차입니다. 그래서 신고 서류 준비는 서류 작업이 아니라 <strong>시설·인력·운영을 실제로 갖추는 작업</strong>입니다. 관할청마다 목록이 조금씩 다르지만, 공통으로 요구되는 항목은 대체로 다음과 같습니다.</p>
+
+      <div class="twrap">
+        <table>
+          <caption>[표 3] 원격교육형태 평생교육시설 신고 주요 제출서류 (교육지원청 안내 기준, 발행 시점)</caption>
+          <thead>
+            <tr><th>구분</th><th>주요 서류</th><th>핵심 포인트</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>운영</strong></td><td>운영규칙(교육과정편성표·학습비 내역서 포함)</td><td>과정·학습비·환불 기준을 담는 실질 문서. 가장 오래 붙들게 됨</td></tr>
+            <tr><td><strong>시설·위치</strong></td><td>위치도, 시설배치도(실별 명칭·출입문 표시)</td><td>사무실·동영상 촬영실 등 실별 구분 표시</td></tr>
+            <tr><td><strong>설비·서버</strong></td><td>시설·설비 현황, 서버 현황(자체 소유 시 세금계산서·사진, 임대 시 계약서)</td><td>메인 서버 소재지가 관할 결정 기준</td></tr>
+            <tr><td><strong>인력</strong></td><td>평생교육사 자격증 사본, 근로계약서 또는 재직증명서</td><td>등급 무관 1명 이상, 실제 채용 확인</td></tr>
+            <tr><td><strong>설치자</strong></td><td>(개인) 이력서·주민등록초본 등 / (법인) 정관·등기부·임원명단·범죄경력 조회 동의서 등</td><td>법인은 임원 결격사유·성범죄/아동학대 전력 조회 동의 포함</td></tr>
+            <tr><td><strong>재산</strong></td><td>재산목록, 건축물대장·토지대장, 임대 시 임대차 계약서</td><td>건축물 용도가 요건에 맞는지 확인</td></tr>
+            <tr><td><strong>콘텐츠</strong></td><td>콘텐츠 임대·제작 계약서, 도메인 계약서 등</td><td>외부 콘텐츠·서버 사용 시 계약 근거 필요</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>시설 요건에서 자주 놓치는 것이 <strong>건축물 용도</strong>입니다. 여러 교육청 안내는 건축물대장상 용도가 제2종근린생활시설·교육연구시설·업무시설·판매시설 등에 해당해야 한다고 안내합니다. 사무실을 먼저 계약해 두었는데 용도가 맞지 않아 신고 단계에서 막히는 경우가 있으므로, 임대차 계약 전에 건축물대장 용도부터 확인하는 편이 안전합니다.</p>
+      <p>또 하나 실무에서 중요한 것은 <strong>메인 서버의 소재지</strong>입니다. 여러 교육지원청은 “원격교육에 필요한 메인 서버용 컴퓨터를 갖춘 사무소가 소재하는 관할 교육지원청”에 신고하도록 안내합니다. 서버를 자체 보유할지, 임대(호스팅·클라우드)로 갈지에 따라 제출 서류가 달라지고, 관할 판단에도 영향을 줄 수 있으므로 시스템 구성을 정할 때 함께 고려해야 합니다.</p>
+
+      <h2>신고 절차와 처리, 어떤 순서로 움직이나</h2>
+      <p>준비가 끝나면 절차 자체는 비교적 단순합니다. 다만 각 단계에서 실제로 손이 가는 구간과 기다리는 구간을 구분해 두면 일정을 잡기 쉽습니다.</p>
+
+      <figure>
+        <div class="figbox">
+          <svg role="img" aria-labelledby="rl-title rl-desc" viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" width="760" height="250" style="max-width:100%;height:auto">
+            <title id="rl-title">원격교육형태 평생교육시설 신고 절차 4단계 흐름도</title>
+            <desc id="rl-desc">신고 대상 요건과 시설·인력을 확인하고, 운영규칙과 제출서류를 준비해, 메인 서버 소재지 관할 교육지원청에 신고서를 제출하면, 교육청이 서류와 시설을 검토해 신고증명서를 교부하는 네 단계 절차를 나타낸 흐름도</desc>
+            <rect x="10" y="60" width="160" height="90" rx="6" fill="#eef3fb" stroke="#2b5aa7" stroke-width="1.5"/>
+            <text x="90" y="88" text-anchor="middle" font-size="13" fill="#2b5aa7" font-weight="bold">1. 대상·요건 확인</text>
+            <text x="90" y="110" text-anchor="middle" font-size="11" fill="#333">신고 대상 여부·</text>
+            <text x="90" y="126" text-anchor="middle" font-size="11" fill="#333">시설·평생교육사 점검</text>
+            <rect x="205" y="60" width="160" height="90" rx="6" fill="#eef3fb" stroke="#2b5aa7" stroke-width="1.5"/>
+            <text x="285" y="88" text-anchor="middle" font-size="13" fill="#2b5aa7" font-weight="bold">2. 서류 준비</text>
+            <text x="285" y="110" text-anchor="middle" font-size="11" fill="#333">운영규칙·시설배치도·</text>
+            <text x="285" y="126" text-anchor="middle" font-size="11" fill="#333">서버·재산·인력 서류</text>
+            <rect x="400" y="60" width="160" height="90" rx="6" fill="#eef3fb" stroke="#2b5aa7" stroke-width="1.5"/>
+            <text x="480" y="88" text-anchor="middle" font-size="13" fill="#2b5aa7" font-weight="bold">3. 신고서 제출</text>
+            <text x="480" y="110" text-anchor="middle" font-size="11" fill="#333">서버 소재지 관할</text>
+            <text x="480" y="126" text-anchor="middle" font-size="11" fill="#333">교육지원청에 접수</text>
+            <rect x="595" y="60" width="155" height="90" rx="6" fill="#e7f1ea" stroke="#2f7a52" stroke-width="1.5"/>
+            <text x="672" y="88" text-anchor="middle" font-size="13" fill="#2f7a52" font-weight="bold">4. 신고증명서 교부</text>
+            <text x="672" y="110" text-anchor="middle" font-size="11" fill="#333">서류·시설 검토 후</text>
+            <text x="672" y="126" text-anchor="middle" font-size="11" fill="#333">신고증명서 발급</text>
+            <path d="M172 105 L201 105" stroke="#2b5aa7" stroke-width="1.5" marker-end="url(#rlarrow)"/>
+            <path d="M367 105 L396 105" stroke="#2b5aa7" stroke-width="1.5" marker-end="url(#rlarrow)"/>
+            <path d="M562 105 L591 105" stroke="#2b5aa7" stroke-width="1.5" marker-end="url(#rlarrow)"/>
+            <defs>
+              <marker id="rlarrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 z" fill="#2b5aa7"/>
+              </marker>
+            </defs>
+            <text x="90" y="180" text-anchor="middle" font-size="11" fill="#666">설립 기관</text>
+            <text x="285" y="180" text-anchor="middle" font-size="11" fill="#666">설립 기관</text>
+            <text x="480" y="180" text-anchor="middle" font-size="11" fill="#666">설립 기관 → 교육지원청</text>
+            <text x="672" y="180" text-anchor="middle" font-size="11" fill="#666">관할 교육지원청</text>
+            <text x="380" y="215" text-anchor="middle" font-size="11" fill="#666">출처: 시·도교육청·교육지원청 평생교육시설 설치신고 안내(발행 시점 기준). 관할청마다 서류·기간이 다를 수 있음</text>
+          </svg>
+        </div>
+        <figcaption>원격교육형태 평생교육시설 신고 절차 4단계. 담당자가 실제로 손을 대는 구간은 1~2단계이고, 3단계 이후는 교육청 검토를 기다리는 구간입니다. <em>(인라인 SVG — 구글이 텍스트로 읽는 SEO 친화 그래픽)</em></figcaption>
+      </figure>
+
+      <p>담당자가 실제로 손을 대는 구간은 1~2단계입니다. 3단계 접수 이후에는 교육청의 서류·시설 검토를 기다리게 되고, 처리기간은 관할청에 따라 다르지만 통상 영업일 기준 열흘 안팎으로 안내됩니다. 다만 서류 보완 요청이 오면 그만큼 늘어나므로, <strong>개강일이나 첫 모집 공고를 처리기간에 딱 맞춰 잡는 것은 권하지 않습니다.</strong> 신고가 수리되어 신고증명서를 받은 뒤 운영을 시작하는 것이 원칙입니다. 처리기간·수수료·세부 서류는 관할 교육지원청 안내와 정부24 민원안내에서 확인하시기 바랍니다.</p>
+
+      <h2>신고가 끝나면 시작되는 것: 원격교육 '운영'의 실체</h2>
+      <p>신고증명서를 받으면 설립이 끝난 것 같지만, 사실은 여기서부터가 시작입니다. 신고 서류에 적어 낸 “정보통신매체로 30시간 이상 과정을 10인 이상에게 제공한다”는 문장을 <strong>실제로 굴려야 하기 때문</strong>입니다. 그리고 이 문장은 곧 시스템 요구사항이 됩니다.</p>
+      <p>원격교육형태 평생교육시설의 운영은 오프라인 강의실 운영과 결이 다릅니다. 학습자가 언제 로그인해 어느 차시까지 들었는지, 30시간 과정을 이수했는지, 학습비는 결제됐고 환불 요청은 어떻게 처리됐는지, 수료 기준을 넘겼는지, 수료증은 발급됐는지가 전부 <strong>데이터로 남아야</strong> 합니다. 초기에는 접수 폼과 엑셀, 계좌 입금 대조로 시작하는 경우가 많지만, 수강생이 늘고 과정이 여러 개가 되면 “이 사람이 어느 과정을 언제 이수했는가”를 확인하는 데 시간이 걸리기 시작합니다. 특히 원격교육은 <strong>진도(수강 이력)가 곧 교육의 증빙</strong>이라, 이 기록이 흩어져 있으면 운영 자체가 흔들립니다.</p>
+
+      <h2>원격평생교육을 굴리는 LMS는 무엇을 해야 하나</h2>
+      <p>그래서 원격평생교육원의 운영 도구로 자연스럽게 등장하는 것이 LMS(학습관리시스템, Learning Management System)입니다. 신고 서류에 담긴 운영 항목을 시스템 기능으로 옮겨 보면, LMS가 왜 필요한지가 분명해집니다.</p>
+
+      <div class="twrap">
+        <table>
+          <caption>[표 4] 원격평생교육 운영 항목 ↔ LMS에서 필요한 기능</caption>
+          <thead>
+            <tr><th>운영 항목</th><th>왜 필요한가</th><th>LMS에서 다루는 기능</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>학습자 접수·관리</strong></td><td>불특정 다수 회원 가입·소속·등급 관리</td><td>회원관리·회원소속/그룹/등급, 관리자 권한 계층</td></tr>
+            <tr><td><strong>과정 개설·운영</strong></td><td>30시간 과정을 차시로 편성해 운영</td><td>과정개설→과정운영→통합수강생관리</td></tr>
+            <tr><td><strong>진도·수강 이력</strong></td><td>이수 여부가 곧 교육 증빙</td><td>과정운영의 진도·수강 이력 관리</td></tr>
+            <tr><td><strong>학습비 결제·환불</strong></td><td>학습비 수취가 신고 요건의 일부</td><td>주문결제관리(결제·환불·정산·쿠폰)</td></tr>
+            <tr><td><strong>수료·수료증</strong></td><td>수료 기준 판정과 증서 발급</td><td>수료관리 + 인증서템플릿(과정수료증) 발급</td></tr>
+            <tr><td><strong>동영상 송출</strong></td><td>인터넷·화상강의 콘텐츠 제공</td><td>동영상 플랫폼 연동(업로드·저장·송출)</td></tr>
+            <tr><td><strong>공지·자료·문의</strong></td><td>학습자 안내와 커뮤니케이션</td><td>게시판(공지·FAQ·자료실·후기), 메일 템플릿</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>표에서 보듯, 원격평생교육 운영은 회원·과정·결제·수료·영상이 <strong>하나의 데이터 위에서 이어질 때</strong> 굴러갑니다. 맑은이러닝 LMS(교육통합관리시스템)의 경우 과정관리에서 <strong>과정개설→과정운영→수료관리→통합수강생관리</strong>가 한 줄기로 이어지고, 수료 처리 후에는 인증서관리의 <strong>인증서템플릿(과정수료증)</strong>으로 수료증을 발급합니다. 학습비는 주문결제관리에서 <strong>결제·환불·정산·쿠폰</strong>까지 내장으로 다루고, 회원은 <strong>소속·그룹·등급</strong>과 다단계 관리자 권한으로 구조화됩니다. 인터넷·화상강의에 필요한 영상은 별도 동영상 플랫폼(위캔디오 등)이 연동되어 업로드·저장·송출을 담당합니다. 접수부터 수료·발급까지가 같은 시스템에 남으므로, 과정이 늘어도 이력을 조회하는 경로가 하나로 유지됩니다.</p>
+      <p>이것이 원격교육형태 시설에 특히 의미가 있는 이유는, 앞서 본 대로 <strong>원격교육은 진도(수강 이력)가 곧 증빙</strong>이기 때문입니다. 학습자별 이수 기록이 시스템에 정리되어 있으면, 운영 중에도 신고 이후에도 “누가 언제 무엇을 이수했는가”를 바로 꺼낼 수 있습니다.</p>
+
+      <h2>왜 원격평생교육원이 맑은소프트를 선택하나</h2>
+      <p>시스템을 고르는 단계까지 왔다면, 원격평생교육원이 특히 눈여겨보는 지점이 몇 가지 있습니다.</p>
+      <p>첫째는 <strong>원격교육 운영에 필요한 기능이 처음부터 하나로 묶여 있다</strong>는 점입니다. 회원·과정·진도·결제·수료·영상을 따로 붙이지 않고 한 시스템에서 다루므로, 별도 개발이나 여러 도구의 조합 없이 신고 서류에 적어 낸 운영을 그대로 구현할 수 있습니다.</p>
+      <p>둘째는 <strong>보안과 안정성</strong>입니다. 원격평생교육원은 불특정 다수의 개인정보와 결제·수강 데이터를 다루므로 시스템 신뢰가 중요합니다. 맑은소프트의 LMS는 국내 최초로 CSAP(클라우드 보안인증)를 받은 LMS이며, 동시접속 약 5,000명 규모에 대응하고 데이터를 4중으로 백업하는 운영 사양을 갖추고 있습니다. 학습자가 몰리는 개강 시점이나 마감 시점의 안정성은 원격교육 운영에서 실제로 체감되는 부분입니다.</p>
+      <p>셋째는 <strong>레퍼런스</strong>입니다. 맑은소프트는 16년간 LMS를 개발·서비스해 왔고, 현재 약 375개 기관의 교육 운영을 지원하고 있습니다. 그중에는 원격평생교육원도 다수 포함되어 있어, 같은 형태의 시설을 운영해 본 경험 위에서 시스템을 제안받을 수 있습니다.</p>
+      <p>다만 순서는 지키는 편이 낫습니다. 시스템을 먼저 고르고 제도를 맞추는 순서가 되면, 정작 신고 대상 여부나 시설 요건에서 막혔을 때 되돌릴 것이 많아집니다. <strong>제도 확인 → 요건·시설·인력 준비 → 신고 → 운영 시스템</strong>의 순서가 안전합니다.</p>
+
+      <h2>정리: 설립 전에 확인할 순서</h2>
+      <p>원격평생교육시설 설립을 한 줄로 압축하면 “우리가 신고 대상인지 확인하고, 시설·인력·운영규칙을 갖춰 관할 교육청에 신고한 뒤, 원격교육을 굴릴 시스템을 준비한다”입니다. 순서를 다시 놓으면 이렇습니다.</p>
+      <ol>
+        <li>학위과정인지 아닌지로 신고(원격교육형태)와 인가(원격대학형태)를 구분</li>
+        <li>학습비·불특정 다수·10인 이상 30시간·정보통신매체의 네 요건에 해당하는지, 학원법 경계는 아닌지 확인</li>
+        <li>설치자 결격사유 점검, 평생교육사 채용 착수</li>
+        <li>운영규칙·시설배치도·서버·재산·인력 서류 준비(건축물 용도·서버 소재지 확인)</li>
+        <li>메인 서버 소재지 관할 교육지원청에 신고, 신고증명서 수령 후 운영 개시</li>
+        <li>학습자 접수·결제·진도·수료·발급을 굴릴 LMS 등 운영 시스템 마련</li>
+      </ol>
+      <p>이 글의 내용은 평생교육법과 시·도교육청·교육지원청의 평생교육시설 설치신고 안내를 근거로 발행 시점(2026년 8월) 기준으로 정리한 것입니다. 요건·서류·처리 절차는 개정될 수 있고 관할청마다 판단이 갈리는 부분도 있으므로, 실제 설립을 진행하기 전에는 <strong>관할 교육지원청과 평생교육법령을 직접 확인</strong>하시기 바랍니다.</p>
+
+      <p>설립 관련해 함께 읽으면 좋은 글로는 원격교육의 이수 기준을 다룬 <a href="/lms/elearning-progress-rate-explained/">이러닝 진도율, 어떻게 계산되고 무엇을 증빙하나</a>, 서버를 자체 보유할지 클라우드로 갈지 판단하는 <a href="/lms/self-hosted-vs-cloud-lms/">자체구축 LMS와 클라우드 LMS, 무엇을 기준으로 고르나</a>, 수료 이후를 자동화하는 <a href="/hrd/certificate-auto-issue/">수료증 자동 발급</a>, 그리고 도입 전체 흐름을 짚은 <a href="/lms/lms-adoption-complete-guide-2026/">LMS 도입 완전 가이드</a>가 있습니다.</p>
+
+      <div class="cta">신고 이후 접수·결제·진도·수료·발급을 어떤 구조로 굴릴지 기관 상황에 맞춰 함께 그려 보고 싶으시다면 <a href="/contact/"><strong>무료 상담</strong></a>에서 원격평생교육원 운영에 맞는 시스템 구성을 같이 검토해 볼 수 있습니다.</div>
+    </div>
+
+    <section class="faq">
+      <h2>자주 묻는 질문</h2>
+      <details open>
+        <summary>원격평생교육시설을 만들려면 '인가'를 받아야 하나요, '신고'를 하면 되나요?</summary>
+        <div class="ans">대부분의 원격평생교육원은 인가가 아니라 신고 대상입니다. 평생교육법 제33조는 정보통신매체로 불특정 다수인에게 원격교육을 실시하는 원격교육형태의 평생교육시설을 교육감 신고 대상으로 두고, 전문대학·대학 졸업자와 동등한 학력·학위를 인정하는 원격대학형태의 평생교육시설을 별도로 두고 있습니다. 학위를 주지 않는 일반 원격교육 강좌를 유료로 운영하는 기관은 신고 대상이고, 학력·학위 인정을 목표로 하는 원격대학형태는 교육부장관 인가라는 더 높은 규제 층위에 놓입니다. 발행 시점(2026년 8월) 기준이며, 우리 사업이 어느 쪽에 해당하는지는 관할 교육지원청과 평생교육법령으로 먼저 확인하시기 바랍니다.</div>
+      </details>
+      <details>
+        <summary>원격평생교육시설 신고를 하려면 반드시 평생교육사를 둬야 하나요?</summary>
+        <div class="ans">네, 자격증 등급과 관계없이 평생교육사 1명 이상을 배치하는 것이 신고 요건에 포함되는 것으로 안내되고 있습니다. 신고 서류에도 평생교육사 자격증 사본과 함께 근로계약서 또는 재직증명서를 제출하도록 되어 있어, 형식상 이름만 올리는 것이 아니라 실제로 채용된 인력임을 확인합니다. 다만 세부 배치 기준과 서류 양식은 관할 교육청과 발행 시점의 평생교육법 시행령·시행규칙에 따라 달라질 수 있으므로, 채용 일정을 신고 일정과 함께 잡을 때 관할청 안내를 먼저 확인하는 것이 안전합니다.</div>
+      </details>
+      <details>
+        <summary>신고만 하면 바로 수강생을 모집해도 되나요?</summary>
+        <div class="ans">신고가 수리되어 신고증명서를 받은 뒤에 운영을 시작하는 것이 원칙입니다. 처리기간은 관할 교육청에 따라 다르지만 통상 영업일 기준 열흘 안팎으로 안내되며, 제출 서류에 보완이 필요하면 그만큼 길어집니다. 그래서 개강일이나 첫 모집 공고를 신고 처리기간에 딱 맞춰 잡는 것은 권하지 않습니다. 또한 신고가 끝났다고 준비가 끝난 것이 아니라, 실제로는 학습자 접수·학습비 결제·진도 관리·수료 처리를 굴릴 운영 시스템을 그 시점에 갖춰야 첫 강좌를 운영할 수 있습니다.</div>
+      </details>
+    </section>
+  </article>
+</main>
+
+<footer class="site">교육운영 노트 by 맑은소프트 · 미리보기 렌더 · 실제 발행 시 정적 빌드 + canonical/JSON-LD 주입</footer>
