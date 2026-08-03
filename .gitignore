@@ -20,6 +20,7 @@ _scratch/
 _deploy/public/
 _deploy/site.zip
 _deploy/resp.json
+_deploy/published-count.txt
 temp/
 .netlify/
 

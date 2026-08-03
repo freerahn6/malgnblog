@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re, os, json, markdown, html as H
+import re, os, json, markdown, html as H, datetime as _dt
 BASE=os.path.dirname(os.path.abspath(__file__)); ART=BASE+"/articles"; PREV=BASE+"/_preview"; OUT=BASE+"/_deploy/public"; _D=BASE+"/_deploy"
 SITE="https://blog.malgnsoft.com"
 # 관리자 통계 대시보드 경로. 바꾸려면 여기 한 곳만 고치고, server/WEB-INF/jsp/track.jsp의
@@ -130,7 +130,7 @@ def parse(fp):
     d={}
     for line in fm.split('\n'):
         mm=re.match(r'^([a-zA-Z_]+):\s*(.*)$',line)
-        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption','draft','updated'):
+        if mm and mm.group(1) in ('title','description','category','slug','funnel','date','author','cover_caption','draft','updated','publish_at'):
             v=mm.group(2).strip().strip('"').strip("'")
             d[mm.group(1)]=v
     # faq 블록 파싱 (q/a 쌍)
@@ -147,9 +147,33 @@ def parse(fp):
     d['body']=body.strip()
     return d
 
+# ---- 예약 발행(publish_at) ----
+# front matter 에 `publish_at: 2026-08-10 09:00` (KST)을 적으면 그 시각 전까지는
+# draft 와 똑같이 사이트 출력에서 통째로 빠진다. 시각이 지난 뒤 '다시 빌드'되면 노출된다.
+# 즉 예약이 저절로 풀리려면 예약 시각 이후에 빌드가 한 번 돌아야 한다
+# — .github/workflows/deploy.yml 의 schedule(cron)이 그 역할을 한다.
+NOW_KST=_dt.datetime.utcnow()+_dt.timedelta(hours=9)
+
+def parse_publish_at(v, fn):
+    """'2026-08-10 09:00' / '2026-08-10T09:00' / '2026-08-10'(=00:00) → datetime(KST).
+    비어 있으면 None. 형식이 틀리면 빌드를 멈춘다 —
+    오타를 조용히 무시하면 예약한 글이 즉시 공개돼 버리기 때문이다(실패는 안전한 쪽으로)."""
+    v=str(v).split('#')[0].strip().strip('"').strip("'")
+    if not v: return None
+    m=re.match(r'^(\d{4})-(\d{2})-(\d{2})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$',v)
+    if not m:
+        raise SystemExit(f"[중단] {fn}: publish_at 형식이 잘못됐습니다 → {v!r}\n"
+                         f"        올바른 예: publish_at: 2026-08-10 09:00  (KST 기준, 시각 생략 시 00:00)")
+    y,mo,da,hh,mi,ss=m.groups()
+    try:
+        return _dt.datetime(int(y),int(mo),int(da),int(hh or 0),int(mi or 0),int(ss or 0))
+    except ValueError as e:
+        raise SystemExit(f"[중단] {fn}: publish_at 이 존재하지 않는 일시입니다 → {v!r} ({e})")
+
 arts=[]
 _drafts=[]
-_allarts=[]   # 발행+비게시 전부. 관리자 콘솔(/gamma2) 매니페스트 전용. 사이트 출력엔 쓰지 않는다.
+_sched=[]     # 예약 대기(아직 시각 전) — 빌드 로그로만 알린다
+_allarts=[]   # 발행+비게시+예약 전부. 관리자 콘솔(/gamma2) 매니페스트 전용. 사이트 출력엔 쓰지 않는다.
 for fn in os.listdir(ART):
     if fn.endswith('.md'):
         d=parse(f"{ART}/{fn}"); d['file']=fn
@@ -157,13 +181,33 @@ for fn in os.listdir(ART):
         # 단 관리자 콘솔용 메타는 남겨야 하므로 _allarts 에는 담고, arts 에서만 뺀다.
         # (arts 는 아래 모든 사이트 생성이 참조하는 발행글 목록 — 의미가 바뀌면 안 된다)
         is_draft = str(d.get('draft','')).split('#')[0].strip().lower()=='true'
+        pub_at   = parse_publish_at(d.get('publish_at',''), fn)
+        # 예약 시각이 아직 안 왔으면 draft 와 같은 취급. draft:true 는 예약보다 우선한다(항상 숨김).
+        is_sched = (pub_at is not None) and (not is_draft) and (NOW_KST < pub_at)
+        # 예약 글의 '발행일'은 예약 시각이다. date 를 따로 적었더라도 여기에 맞춘다 —
+        # 목록 정렬·sitemap lastmod·article:published_time 이 전부 date 를 쓰기 때문에
+        # 어긋나면 "발행일 7월 1일인데 실제로는 8월 10일에 뜬 글"이 된다.
+        if pub_at is not None:
+            _dstr=pub_at.strftime('%Y-%m-%d')
+            if d.get('date') and d['date']!=_dstr:
+                print(f"  ! {fn}: date({d['date']}) 를 publish_at 기준 {_dstr} 로 맞춥니다")
+            d['date']=_dstr
+            d['publish_at']=pub_at.strftime('%Y-%m-%d %H:%M')
         d['is_draft']=is_draft
+        d['is_scheduled']=is_sched
         _allarts.append(d)
         if is_draft:
             _drafts.append(d.get('slug',fn)); continue
+        if is_sched:
+            _sched.append((pub_at,d.get('slug',fn))); continue
         arts.append(d)
 if _drafts:
     print("DRAFT(숨김) 제외:",", ".join(_drafts))
+if _sched:
+    print(f"예약 대기(숨김) {len(_sched)}편 — 현재 {NOW_KST.strftime('%Y-%m-%d %H:%M')} KST 기준:")
+    for _at,_sl in sorted(_sched):
+        _left=_at-NOW_KST; _h=int(_left.total_seconds()//3600)
+        print(f"  · {_at.strftime('%Y-%m-%d %H:%M')} KST  {_sl}  (약 {_h//24}일 {_h%24}시간 뒤)")
 # order by date
 arts.sort(key=lambda a:a.get('date',''))
 bysl={a['slug']:a for a in arts}
@@ -619,11 +663,21 @@ for _d in sorted(_allarts,key=lambda a:a.get('date',''),reverse=True):
         "funnel": _d.get('funnel',''),
         "slug": _slug,
         "draft": bool(_d.get('is_draft')),
+        # 예약 발행. publish_at 은 'YYYY-MM-DD HH:MM'(KST) 또는 빈 문자열.
+        # status 가 콘솔이 읽는 단일 상태값이고, draft 는 옛 콘솔 호환용으로 남긴다.
+        "publish_at": _d.get('publish_at',''),
+        "status": ('draft' if _d.get('is_draft') else 'scheduled' if _d.get('is_scheduled') else 'published'),
     })
-_gen=(_dt.datetime.utcnow()+_dt.timedelta(hours=9)).strftime('%Y-%m-%d %H:%M:%S')+' KST'
-_manifest={"generated":_gen,"count":len(_manifest_posts),"posts":_manifest_posts}
+# generated 는 '벽시계 시각'이면 안 된다. 예약 발행 때문에 cron 이 10분마다 빌드하는데,
+# 매번 값이 바뀌면 내용이 그대로여도 posts.json 이 달라져 deploy 브랜치에 빈 커밋이 쌓이고
+# 서버가 헛되이 계속 당겨간다. 그래서 '콘텐츠 기준 시각'(가장 최근 글의 일시)으로 만든다 —
+# 입력이 같으면 결과도 같아 변화가 없을 때 빌드가 조용해진다.
+# 예약 글의 미래 일시는 빼고 '발행된' 글만 본다 — 안 그러면 generated 가 미래 날짜가 된다.
+_gen=max([(_p.get('updated') or _p.get('date',''))
+          for _p in _manifest_posts if _p.get('status')=='published'] or [''])
+_manifest={"generated":(_gen+' KST').strip(),"count":len(_manifest_posts),"posts":_manifest_posts}
 open(f"{_dst}/posts.json",'w',encoding='utf-8').write(json.dumps(_manifest,ensure_ascii=False))
-print("posts.json 매니페스트:",len(_manifest_posts),"posts(비게시 포함) ->",f"{_dst}/posts.json")
+print("posts.json 매니페스트:",len(_manifest_posts),"posts(비게시·예약 포함) ->",f"{_dst}/posts.json")
 
 # ---- 새 관리자 콘솔(시안) 동봉 — /{ADMIN2_PATH}/ ----
 # admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 새 관리자 경로에 서빙한다.
@@ -635,5 +689,8 @@ if os.path.isfile(_mock):
     _sh.copyfile(_mock,f"{OUT}/{ADMIN2_PATH}/index.html")
     print(f"새 관리자 콘솔(시안) 동봉: /{ADMIN2_PATH}/")
 
+# CI 건전성 검사가 읽는 값. articles/*.md 개수로 세면 draft·예약 글까지 세어
+# "원고는 N편인데 페이지가 모자라다"는 오탐이 난다 — 실제 발행 편수를 여기서 넘긴다.
+open(f"{_D}/published-count.txt",'w',encoding='utf-8').write(str(len(arts)))
 print("TOTAL articles:",len(arts))
 EOF=1
