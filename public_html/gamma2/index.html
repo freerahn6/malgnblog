@@ -83,11 +83,13 @@ tr.rowlink:hover{background:var(--accent-soft)}
 .bar span{display:block;height:100%;background:var(--accent);border-radius:3px}
 .title-cell{font-weight:600;max-width:340px}
 .title-cell .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+td .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 /* ---------- 칩/배지 ---------- */
 .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
 .badge.pub{background:var(--green-soft);color:var(--green)}
 .badge.draft{background:var(--gray-soft);color:var(--gray)}
+.badge.sched{background:var(--amber-soft);color:var(--amber)}
 .badge.trash{background:var(--red-soft);color:var(--red)}
 .badge.pending{background:var(--amber-soft);color:var(--amber)}
 .funnel{font-size:11px;font-weight:700;color:var(--muted)}
@@ -228,7 +230,9 @@ tr.rowlink:hover{background:var(--accent-soft)}
    실데이터 연동 (읽기 전용)
      · /api/stats?pw=  → 조회수 집계 {today,total,days,posts:[{path,count}],date}
      · /api/posts?pw=  → 글 메타 매니페스트 {generated,count,posts:[{path,title,category,
-                          author,date,updated,funnel,slug,draft}]}
+                          author,date,updated,funnel,slug,draft,publish_at,status}]}
+                          status = published | scheduled | draft
+                          (scheduled = publish_at 이 아직 안 온 예약 글. 사이트에는 없다)
      두 응답을 path("/{cat}/{slug}/")로 조인해 POSTS 를 만든다(stats에 없는 글은 views=0).
    ========================================================================= */
 var CATL={lms:"LMS",hrd:"HRD",certification:"자격검정",video:"영상",edutech:"에듀테크",news:"소식"};
@@ -248,8 +252,9 @@ function buildData(stats,manifest){
   POSTS=((manifest&&manifest.posts)||[]).map(function(p){
     return {file:p.path,path:p.path,slug:p.slug||"",title:p.title||"",
       category:p.category||"",author:p.author||"",funnel:p.funnel||"",
-      date:p.date||"",updated:p.updated||p.date||"",
-      status:p.draft?"draft":"published",views:vmap[p.path]||0};
+      date:p.date||"",updated:p.updated||p.date||"",publish_at:p.publish_at||"",
+      // status 는 신규 필드. 옛 매니페스트(draft 만 있던 것)도 읽히도록 폴백을 둔다.
+      status:p.status||(p.draft?"draft":"published"),views:vmap[p.path]||0};
   });
 }
 // 두 API를 함께 부른다. 401이면 code=401 로 던져 게이트 복귀에 쓴다.
@@ -274,7 +279,8 @@ function el(sel){return document.querySelector(sel)}
 function fmt(n){return (n||0).toLocaleString('ko-KR')}
 function esc(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function statusBadge(st,pending){
-  var b={published:['pub','● 게시'],draft:['draft','◌ 비게시'],trash:['trash','✕ 휴지통']}[st];
+  var b={published:['pub','● 게시'],draft:['draft','◌ 비게시'],
+         scheduled:['sched','🕘 예약'],trash:['trash','✕ 휴지통']}[st];
   var h='<span class="badge '+b[0]+'">'+b[1]+'</span>';
   if(pending)h+=' <span class="badge pending" title="커밋됨 · 빌드 반영 전">⏳ 반영 대기중</span>';
   return h;
@@ -416,6 +422,7 @@ function drawChart(mount,days){
 function renderDashboard(v){
   var pub=POSTS.filter(function(p){return p.status==='published'}).length;
   var drafts=POSTS.filter(function(p){return p.status==='draft'}).length;
+  var sched=POSTS.filter(function(p){return p.status==='scheduled'}).length;
   var head='<div class="pagehead"><h1>대시보드</h1><span class="meta">'+(TODAY||'-')+' 기준 (KST)</span><span class="sp"></span>'+
     '<button class="btn" onclick="manualReload()">↻ 새로고침</button></div>';
   var empty=(POSTS.length===0);
@@ -423,7 +430,8 @@ function renderDashboard(v){
     '<div class="stat"><div class="lbl">오늘 조회수</div><div class="val">'+(empty?'0':fmt(STATS.today))+'</div><div class="sub">전일 대비 '+(empty?'—':'+8.2%')+'</div></div>'+
     '<div class="stat"><div class="lbl">누적 조회수</div><div class="val">'+(empty?'0':fmt(STATS.total))+'</div><div class="sub">전체 기간</div></div>'+
     '<div class="stat"><div class="lbl">게시물 수</div><div class="val">'+(empty?'0':fmt(pub))+'</div><div class="sub">게시중</div></div>'+
-    '<div class="stat"><div class="lbl">비게시 수</div><div class="val">'+(empty?'0':fmt(drafts))+'</div><div class="sub">draft</div></div>'+
+    '<div class="stat"><div class="lbl">비게시 수</div><div class="val">'+(empty?'0':fmt(drafts))+'</div>'+
+      '<div class="sub">'+(sched?'예약 '+fmt(sched)+'편 대기중':'draft')+'</div></div>'+
     '</div>';
   var update='<div class="panel"><h2>프로그램 갱신</h2>'+
     '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">'+
@@ -541,7 +549,7 @@ function renderPosts(v){
   var authors=Array.from(new Set(POSTS.map(function(p){return p.author})));
   var sel=function(id,cur,opts){return '<select id="'+id+'" aria-label="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(cur===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select>'};
   var filterbar='<div class="filterbar">'+
-    sel('f-status',F.status,[['all','상태 전체'],['published','게시'],['draft','비게시']])+
+    sel('f-status',F.status,[['all','상태 전체'],['published','게시'],['scheduled','예약'],['draft','비게시']])+
     sel('f-cat',F.cat,[['all','카테고리 전체']].concat(Object.keys(CATL).map(function(k){return [k,CATL[k]]})))+
     sel('f-author',F.author,[['all','저자 전체']].concat(authors.map(function(a){return [a,a]})))+
     sel('f-funnel',F.funnel,[['all','퍼널 전체'],['TOFU','TOFU'],['MOFU','MOFU'],['BOFU','BOFU']])+
@@ -592,7 +600,8 @@ function drawTable(){
         '<td class="title-cell">'+esc(p.title)+'<div class="sub">/'+p.category+'/'+p.slug+'/</div></td>'+
         '<td><span class="chip">'+CATL[p.category]+'</span> <span class="funnel">'+p.funnel+'</span></td>'+
         '<td>'+esc(p.author)+'</td>'+
-        '<td>'+p.date+'</td>'+
+        // 예약 글은 '발행일'이 아직 오지 않은 날짜다 — 시:분까지 보여줘야 오해가 없다
+        '<td>'+p.date+(p.status==='scheduled'?'<div class="sub">'+esc(p.publish_at.slice(11))+' 공개</div>':'')+'</td>'+
         '<td>'+p.updated+'</td>'+
         '<td>'+statusBadge(p.status,p.pending)+'</td>'+
         '<td class="n">'+fmt(p.views)+'</td>'+
