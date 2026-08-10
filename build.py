@@ -38,7 +38,7 @@ MOBILE_NAV_CSS=('.navtoggle{display:none;align-items:center;justify-content:cent
  '.navtoggle:focus-visible{outline:3px solid var(--accent);outline-offset:2px}'
  '@media (max-width:1000px){'
  'header.site .wrap{gap:10px}'
- '.navtoggle{display:flex;order:9;margin-left:6px}'
+ '.navtoggle{display:flex;flex-direction:column;order:9;margin-left:6px}'
  'header.site .wrap .cta-btn{margin-left:auto}'
  'nav.main{display:none}'
  'body.nav-open nav.main{display:flex;position:absolute;top:100%;left:0;right:0;z-index:5;'
