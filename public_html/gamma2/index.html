@@ -103,6 +103,25 @@ td .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 .filterbar select:focus,.filterbar input:focus{outline:none;border-color:var(--accent)}
 .panel code{background:var(--bg);border:1px solid var(--line);padding:1px 6px;border-radius:5px;
   color:var(--text);font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* 미게시 글 본문 미리보기. 원고 HTML(표·인라인 SVG·figure)을 그대로 받아 그리므로
+   콘솔 폭 안에서 넘치지 않게만 잡아준다 — 발행 페이지와 똑같이 보일 필요는 없다. */
+.bodyprev{font-size:14px;line-height:1.85;color:var(--text);max-width:760px;overflow-wrap:anywhere}
+.bodyprev>*:first-child{margin-top:0}
+.bodyprev h2{font-size:17px;margin:26px 0 8px;padding-top:16px;border-top:1px solid var(--line)}
+.bodyprev h3{font-size:15px;margin:18px 0 6px}
+.bodyprev p{margin:11px 0}
+.bodyprev ul,.bodyprev ol{margin:11px 0;padding-left:20px}
+.bodyprev li{margin:5px 0}
+.bodyprev table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+.bodyprev th,.bodyprev td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.bodyprev th{background:var(--bg);white-space:nowrap}
+.bodyprev caption{caption-side:top;text-align:left;font-size:12px;color:var(--muted);padding-bottom:6px}
+.bodyprev figure{margin:16px 0}
+.bodyprev figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+.bodyprev svg,.bodyprev img{max-width:100%;height:auto}
+.bodyprev blockquote{margin:13px 0;padding:9px 13px;border-left:3px solid var(--line);color:var(--muted)}
+.bodyprev a{color:var(--accent);text-decoration:underline}
+.bodyprev hr{border:0;border-top:1px solid var(--line);margin:20px 0}
 .rowact{display:flex;gap:4px;flex-wrap:wrap}
 .rowact button{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:5px 9px;min-height:30px;border-radius:7px;font-size:12px;cursor:pointer}
 .rowact button:hover{border-color:var(--accent);color:var(--accent)}
@@ -728,10 +747,7 @@ function renderEdit(v,file){
     '<div class="field"><label>조회수</label><input value="'+fmt(p.views)+'" disabled></div>'+
     '<div class="field"><label>게시 상태</label><div style="padding-top:6px">'+statusBadge(p.status)+'</div></div>'+
     '</div></div>';
-  var body='<div class="panel"><h2>본문</h2>'+
-    '<div class="empty"><div class="big">📝</div>본문 편집은 다음 단계입니다.<br>'+
-    '<span style="font-size:12px">이번 콘솔은 <b>읽기 전용</b> — 조회수·글 메타 조회까지 제공합니다. '+
-    '본문 에디터·저장은 백엔드 쓰기 연동(phase-2)에서 붙습니다.</span></div></div>';
+  var body=bodyPanel(p);
   var actions='<div class="actionbar">'+
     '<button class="btn primary" id="savebtn" onclick="doSave(false)">저장</button>'+
     '<button class="btn" onclick="doSave(true)">저장 후 게시</button>'+
@@ -741,6 +757,30 @@ function renderEdit(v,file){
     '</div>';
   v.innerHTML=head+meta+body+
     '<div class="panel" style="padding:0;border:0;background:transparent;margin-bottom:0">'+actions+'</div>';
+}
+/* 본문 패널.
+   미게시(비게시·예약) 글은 사이트에 페이지가 없어서 콘솔 말고는 읽을 데가 없다.
+   그래서 매니페스트가 body_html 을 함께 실어 온다(build.py, 미게시 글만).
+   발행글은 사이트에서 그대로 읽는 편이 정확하므로 링크만 준다 —
+   본문을 두 벌로 들고 다니면 매니페스트만 커지고 둘이 어긋날 여지가 생긴다. */
+function bodyPanel(p){
+  if(p.body_html){
+    var kind=p.status==='scheduled'?'예약':'비게시';
+    return '<div class="panel"><h2>본문 <span style="font-size:11px;font-weight:600;color:var(--muted)">'+
+      '('+kind+' 미리보기 · 사이트에는 아직 없습니다)</span></h2>'+
+      '<div class="bodyprev">'+p.body_html+'</div></div>';
+  }
+  if(p.status==='published'){
+    return '<div class="panel"><h2>본문</h2>'+
+      '<div class="empty"><div class="big">🌐</div>이미 게시된 글입니다.<br>'+
+      '<span style="font-size:12px">본문은 사이트에서 그대로 확인하세요.</span>'+
+      '<div style="margin-top:12px"><a class="btn primary" href="'+esc(p.path)+'" target="_blank" rel="noopener">사이트에서 열기 ↗</a></div>'+
+      '</div></div>';
+  }
+  return '<div class="panel"><h2>본문</h2>'+
+    '<div class="empty"><div class="big">📝</div>본문을 불러오지 못했습니다.<br>'+
+    '<span style="font-size:12px">빌드가 아직 이 글을 담지 못한 상태입니다. '+
+    '대시보드의 <b>[프로그램 갱신]</b>을 눌러 최신 빌드를 당겨오세요.</span></div></div>';
 }
 // 저장 계열은 이번 범위 밖 — 안내만.
 function doSave(thenPublish){return writeBlocked();}
