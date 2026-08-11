@@ -679,6 +679,14 @@ for _d in sorted(_allarts,key=lambda a:a.get('date',''),reverse=True):
         "publish_at": _d.get('publish_at',''),
         "status": ('draft' if _d.get('is_draft') else 'scheduled' if _d.get('is_scheduled') else 'published'),
     })
+    # 미게시 글은 본문 HTML도 함께 싣는다 — 사이트에 페이지가 없어 달리 읽을 방법이 없다.
+    # (발행글은 사이트에서 그냥 열면 되므로 넣지 않는다. 40편 본문을 매번 실어 나르면
+    #  매니페스트가 수 MB 가 되고, 콘솔은 목록 한 번 그리자고 그걸 다 받는다.)
+    # WEB-INF 아래라 비번 확인을 통과한 요청에만 나간다 = 미게시 본문의 노출 경계가 그대로 유지된다.
+    if _manifest_posts[-1]['status']!='published':
+        _pv,_=md2html(_d['body'])
+        # 본문의 /contact/ 는 발행 페이지와 같은 문의 URL 로 바꾼다(콘솔에서 눌러도 404 가 아니게).
+        _manifest_posts[-1]['body_html']=_pv.replace('href="/contact/"',f'href="{INQ}" target="_blank" rel="noopener"')
 # generated 는 '벽시계 시각'이면 안 된다. 예약 발행 때문에 cron 이 10분마다 빌드하는데,
 # 매번 값이 바뀌면 내용이 그대로여도 posts.json 이 달라져 deploy 브랜치에 빈 커밋이 쌓이고
 # 서버가 헛되이 계속 당겨간다. 그래서 '콘텐츠 기준 시각'(가장 최근 글의 일시)으로 만든다 —
