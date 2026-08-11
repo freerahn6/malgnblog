@@ -279,7 +279,10 @@ function buildData(stats,manifest){
       category:p.category||"",author:p.author||"",funnel:p.funnel||"",
       date:p.date||"",updated:p.updated||p.date||"",publish_at:p.publish_at||"",
       // status 는 신규 필드. 옛 매니페스트(draft 만 있던 것)도 읽히도록 폴백을 둔다.
-      status:p.status||(p.draft?"draft":"published"),views:vmap[p.path]||0};
+      status:p.status||(p.draft?"draft":"published"),views:vmap[p.path]||0,
+      // 미게시 글 본문. 여기는 필드를 골라 담는 자리라 새 필드는 반드시 여기도 추가해야 한다
+      // — 매니페스트에 실려 와도 이 줄이 없으면 화면까지 오지 못한다(실제로 그렇게 한 번 빠뜨렸다).
+      body_html:p.body_html||""};
   });
 }
 // 두 API를 함께 부른다. 401이면 code=401 로 던져 게이트 복귀에 쓴다.
