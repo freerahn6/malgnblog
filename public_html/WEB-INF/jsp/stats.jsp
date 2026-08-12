@@ -10,11 +10,27 @@
   adminPw()·pwEquals()는 stats-store.jspf(공용)에 있다.
 --%>
 <%
+  // 첫 getParameter() 가 본문 파싱을 확정시키므로 인코딩은 그 전에 잡아야 한다.
+  // (아래 ?write= 분기가 write.jsp 로 forward 하는데, 거기서 setCharacterEncoding 을
+  //  해봐야 이미 늦다 — 한글 원고가 깨진 채로 커밋된다)
+  try { request.setCharacterEncoding("UTF-8"); } catch (Exception ignore) { }
+
   response.setHeader("Cache-Control", "no-store");
   response.setHeader("X-Robots-Tag", "noindex, nofollow");
 
   javax.servlet.ServletContext ctx = application;
   out.clearBuffer();               // 태그 사이 개행이 JSON 앞에 붙지 않게
+
+  // ?write=1 → 글 쓰기 API(write.jsp)로 넘긴다.
+  //   posts=1 과 같은 이유의 우회다 — 서버 Apache 가 /api/ 를 통째로 프록시하지 않고
+  //   track/stats/update 만 개별 프록시해서, 새 /api/posts/write 경로는 Apache 404 가 난다.
+  //   이미 프록시되는 이 경로에 얹는다. 인증·POST 검사는 write.jsp 가 직접 하므로
+  //   여기서는 아무것도 검사하지 않고 그대로 넘긴다(비번은 POST 본문에 있다).
+  //   Apache 가 blanket /api/ 로 갱신되면 /api/posts/write 정식 경로를 쓰면 된다.
+  if (request.getParameter("write") != null) {
+    request.getRequestDispatcher("/WEB-INF/jsp/write.jsp").forward(request, response);
+    return;
+  }
 
   if (!pwEquals(request.getParameter("pw"), adminPw(ctx))) {
     response.setStatus(401);
