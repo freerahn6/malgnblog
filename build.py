@@ -708,6 +708,41 @@ if os.path.isfile(_mock):
     _sh.copyfile(_mock,f"{OUT}/{ADMIN2_PATH}/index.html")
     print(f"새 관리자 콘솔(시안) 동봉: /{ADMIN2_PATH}/")
 
+    # ---- 콘솔 글쓰기 화면이 쓰는 것들 ----
+    # (1) 위지윅 에디터(TOAST UI) 자산. 자체서버라 CDN 을 못 쓴다 → 저장소에 벤더링한 dist 를
+    #     정적 파일로 복사한다. 본문 인라인(data URI)이 아니라 파일 서빙이다 — 400KB 를
+    #     콘솔 HTML 에 녹이면 목록만 보려는 진입도 매번 그걸 다 받는다.
+    _vsrc=BASE+"/admin-console/vendor"
+    if os.path.isdir(_vsrc):
+        _vdst=f"{OUT}/{ADMIN2_PATH}/vendor"
+        if os.path.isdir(_vdst): _sh.rmtree(_vdst)
+        _sh.copytree(_vsrc,_vdst)
+        print(f"콘솔 에디터 자산 동봉: /{ADMIN2_PATH}/vendor/")
+    else:
+        # 조용히 건너뛰면 콘솔에서 에디터가 안 뜨는 이유를 찾느라 헤맨다.
+        print(f"[경고] {_vsrc} 없음 — 콘솔 위지윅 에디터가 로드되지 않습니다")
+
+    # (2) 저자 목록 + 네임택. 콘솔에서 작성자를 고르면 네임택 미리보기가 따라붙는다.
+    #     실제 글에 네임택을 붙이는 건 이 빌드다(위 article 생성부의 NAMECARDS.get(aname)) —
+    #     즉 원고 front matter 의 author 가 곧 네임택이고, 콘솔은 그걸 미리 보여줄 뿐이다.
+    #     그래서 선택지를 NAMECARDS 에 실제로 있는 저자로 한정한다. 없는 이름을 고르면
+    #     네임택 없이 발행돼 버리는데, 콘솔에서는 그게 안 보이기 때문이다.
+    _authors=[]
+    for _nm in AUTHORS:
+        if _nm in NAMECARDS:
+            _r,_re,_en,_em=AUTHORS[_nm]
+            _authors.append({"name":_nm,"role":_r,"roleEn":_re,"nameEn":_en,
+                             "emoji":_em,"namecard":NAMECARDS[_nm]})
+    _missing=[_n for _n in AUTHORS if _n not in NAMECARDS]
+    if _missing:
+        print(f"[경고] 네임택 없는 저자(콘솔 선택지에서 제외): {', '.join(_missing)}")
+    _meta={"authors":_authors,
+           "categories":[{"key":_k,"label":CATL[_k]} for _k in CATL],
+           "funnels":["TOFU","MOFU","BOFU"]}
+    open(f"{OUT}/{ADMIN2_PATH}/meta.json",'w',encoding='utf-8').write(
+        json.dumps(_meta,ensure_ascii=False))
+    print(f"콘솔 저자·네임택 메타: {len(_authors)}명 -> /{ADMIN2_PATH}/meta.json")
+
 # CI 건전성 검사가 읽는 값. articles/*.md 개수로 세면 draft·예약 글까지 세어
 # "원고는 N편인데 페이지가 모자라다"는 오탐이 난다 — 실제 발행 편수를 여기서 넘긴다.
 open(f"{_D}/published-count.txt",'w',encoding='utf-8').write(str(len(arts)))

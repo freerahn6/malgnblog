@@ -18,13 +18,13 @@
 
   <display-name>malgnblog</display-name>
 
-  <!-- deploy-rev: 2026-07-27a
+  <!-- deploy-rev: 2026-08-12a
        이 값을 바꾸면 web.xml 내용이 달라져 git reset 시 mtime이 갱신되고,
        Resin(redeploy-mode automatic)이 웹앱을 리로드해 변경된 JSP를 재컴파일한다.
        JSP만 수정한 배포가 서버에 반영되지 않을 때(구 컴파일본 서빙) 이 값을 올린다. -->
   <context-param>
     <param-name>deployRev</param-name>
-    <param-value>2026-07-27a</param-value>
+    <param-value>2026-08-12a</param-value>
   </context-param>
 
   <!-- 집계 파일을 둘 디렉터리. 웹루트 밖이어야 한다(외부 노출·git reset 영향 차단).
@@ -66,6 +66,40 @@
     <param-value>true</param-value>
   </context-param>
 
+  <!-- ── 글 쓰기(/api/posts/write) 관련 설정 ──────────────────────────────
+       관리자 콘솔의 [새 글]·[수정] 저장이 GitHub main 에 커밋할 때 쓴다.
+       서버 워킹트리에 직접 쓰지 않는 이유: update.jsp 의 git reset --hard 로 지워지기 때문. -->
+  <!-- 커밋 대상 저장소 / 브랜치 / 원고 디렉터리. -->
+  <context-param>
+    <param-name>githubRepo</param-name>
+    <param-value>freerahn6/malgnblog</param-value>
+  </context-param>
+  <context-param>
+    <param-name>githubBranch</param-name>
+    <param-value>main</param-value>
+  </context-param>
+  <context-param>
+    <param-name>githubArticleDir</param-name>
+    <param-value>articles</param-value>
+  </context-param>
+  <!-- GitHub 토큰을 담은 파일. 웹루트 밖이어야 하고(외부 노출 차단),
+       git reset 영향 밖이어야 한다. 파일 첫 줄만 읽는다.
+       fine-grained PAT, 이 저장소에 Contents: Read and write 만 주면 된다.
+       권한: Resin 실행 계정만 읽게 chmod 600. 없으면 저장이 503(no_token)으로 막힌다. -->
+  <context-param>
+    <param-name>githubTokenFile</param-name>
+    <param-value>/home/blog/data/github.token</param-value>
+  </context-param>
+  <context-param>
+    <param-name>githubTimeoutSec</param-name>
+    <param-value>10</param-value>
+  </context-param>
+  <!-- 쓰기 기능 전체 스위치. 잠그려면 false 로. -->
+  <context-param>
+    <param-name>writeEnabled</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
   <servlet>
     <servlet-name>track</servlet-name>
     <jsp-file>/WEB-INF/jsp/track.jsp</jsp-file>
@@ -101,6 +135,18 @@
   <servlet-mapping>
     <servlet-name>posts</servlet-name>
     <url-pattern>/api/posts</url-pattern>
+  </servlet-mapping>
+
+  <!-- 글 쓰기 API. 현재 실서버는 Apache 가 /api/ 를 통째로 프록시하지 않아 이 정식 경로가
+       404 다 → 콘솔은 이미 프록시되는 /api/stats?write=1 로 부르고 stats.jsp 가 여기로
+       forward 한다. Apache 에 blanket /api/ 규칙이 적용되면 이 경로를 바로 쓸 수 있다. -->
+  <servlet>
+    <servlet-name>write</servlet-name>
+    <jsp-file>/WEB-INF/jsp/write.jsp</jsp-file>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>write</servlet-name>
+    <url-pattern>/api/posts/write</url-pattern>
   </servlet-mapping>
 
   <welcome-file-list>

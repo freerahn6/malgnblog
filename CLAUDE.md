@@ -24,6 +24,23 @@
   Actions 가 배포 후 `/api/update` 를 호출해 자동 반영. 없으면 `/gamma` 의 [프로그램 갱신] 버튼을 눌러야 뜬다
 - 예약 글은 **관리자 콘솔 `/gamma2`** 에서 `🕘 예약` 상태로 보인다(사이트에는 없음)
 
+## 관리자 콘솔에서 글쓰기 (`/gamma2`)
+- **새 글 / 수정**: 콘솔 → `POST /api/stats?write=1`(write.jsp) → **GitHub `main` 에 커밋** →
+  Actions 빌드 → `deploy` 브랜치 → **[프로그램 갱신]** 을 눌러야 사이트에 뜬다(저장 = 발행 아님)
+- **서버에 직접 쓰지 않는 이유**: `update.jsp` 의 `git reset --hard` 가 워킹트리를 원격에 맞추므로
+  서버 로컬 변경은 다음 갱신 때 소멸한다. 원고의 진실은 원격 `main` 이다
+- **서버 준비물**: `/home/blog/data/github.token`(fine-grained PAT, Contents:write, 0600).
+  없으면 저장이 `503 no_token` 으로 막힌다 — 절차는 `deploy/서버담당자-설치가이드.md` 3-7
+- **front matter 는 통째로 다시 쓰지 않는다.** 콘솔이 아는 키의 '그 줄만' 갈아끼운다
+  (`fmSet`). `faq`·`tags`·`cluster`·`thumbnail` 처럼 build.py 가 안 읽는 필드를
+  재직렬화하다 잃는 사고를 막기 위해서다. 새 필드를 폼에 추가할 때도 이 방식을 지킬 것
+- **본문에 표·인라인 SVG 가 있으면 콘솔이 마크다운 탭으로 고정한다**(`hasRawHtml`).
+  위지윅 모드가 그 블록을 다시 써서 글을 조용히 깨뜨리기 때문
+- 저자를 고르면 **네임택이 자동으로 따라온다** — 붙이는 주체는 빌드다(`NAMECARDS[author]`).
+  그래서 콘솔 선택지는 `namecards.json` 에 실제로 있는 저자로 한정한다
+- 에디터(TOAST UI)는 CDN 을 못 써서 `admin-console/vendor/` 에 벤더링 → 빌드가 `/gamma2/vendor/` 로 복사
+- **JSP 를 고쳤으면 `web.xml` 의 `deployRev` 를 반드시 올린다** — 안 올리면 서버가 구 컴파일본을 계속 쓴다
+
 ## 단일 출처(SSOT) — 충돌 시 이게 최우선
 - **사실·수치** = `_facts.md` (모든 글의 팩트 SSOT)
 - **제품 기능·사양 인용** = `_product-lms.md`(맑은이러닝 LMS) · `_product-wecandeo.md`(위캔디오). 이 둘 밖의 제품 스펙 서술 금지
