@@ -1,0 +1,607 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>블로그 서버 — 남은 요청 1건 (글쓰기 토큰)</title>
+<style>
+/* ─────────────────────────────────────────────────────────────
+   토큰. 라이트가 기본값이고, 다크는 토큰만 다시 정의한다.
+   값은 이 프로젝트의 관리자 콘솔(admin-console/)에서 그대로 가져왔다 —
+   같은 제품의 문서라 새 팔레트를 지어낼 이유가 없다.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --bg:#f4f6fa; --card:#ffffff; --sunk:#eef1f7;
+  --text:#1a2233; --muted:#6b7688; --faint:#9aa4b6;
+  --line:#e2e6ef; --line-soft:#eef1f6;
+  --accent:#2563eb; --accent-soft:#e7efff;
+  --green:#17795e; --green-soft:#e2f3ec;
+  --amber:#a55f07; --amber-soft:#fdf1dd;
+  --red:#c4343a; --red-soft:#fdeaea;
+  --code-bg:#131a27; --code-text:#e6ecf6; --code-muted:#8d9bb3;
+  --shadow:0 1px 2px rgba(20,30,50,.05), 0 8px 24px rgba(20,30,50,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1420; --card:#161d2b; --sunk:#111827;
+    --text:#e7ecf3; --muted:#93a0b4; --faint:#6f7d92;
+    --line:#273043; --line-soft:#1e2636;
+    --accent:#5b8cff; --accent-soft:#1a2540;
+    --green:#3ecf8e; --green-soft:#14301f;
+    --amber:#e5a94a; --amber-soft:#33280f;
+    --red:#ff6b6f; --red-soft:#3a1f22;
+    --code-bg:#0a0f18; --code-text:#e6ecf6; --code-muted:#7c8aa3;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1420; --card:#161d2b; --sunk:#111827;
+  --text:#e7ecf3; --muted:#93a0b4; --faint:#6f7d92;
+  --line:#273043; --line-soft:#1e2636;
+  --accent:#5b8cff; --accent-soft:#1a2540;
+  --green:#3ecf8e; --green-soft:#14301f;
+  --amber:#e5a94a; --amber-soft:#33280f;
+  --red:#ff6b6f; --red-soft:#3a1f22;
+  --code-bg:#0a0f18; --code-text:#e6ecf6; --code-muted:#7c8aa3;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;
+  font-size:16px; line-height:1.75; -webkit-font-smoothing:antialiased;
+  word-break:keep-all; overflow-wrap:anywhere;
+}
+.page{max-width:760px; margin:0 auto; padding:56px 22px 96px; display:flex; flex-direction:column; gap:44px}
+@media (max-width:600px){ .page{padding:34px 16px 64px; gap:34px} }
+
+/* ── 표제 ── */
+.mast{display:flex; flex-direction:column; gap:14px}
+.eyebrow{
+  font-size:12px; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--accent); display:flex; align-items:center; gap:9px;
+}
+.eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+h1{
+  margin:0; font-size:clamp(27px,5.2vw,38px); line-height:1.28; font-weight:800;
+  letter-spacing:-.025em; text-wrap:balance;
+}
+.standfirst{margin:0; font-size:17px; color:var(--muted); line-height:1.7; max-width:60ch}
+.mast .filed{
+  display:flex; flex-wrap:wrap; gap:6px 18px; font-size:13px; color:var(--faint);
+  padding-top:6px; border-top:1px solid var(--line-soft);
+}
+.mast .filed b{color:var(--muted); font-weight:600}
+
+/* ── 공통 섹션 ── */
+section{display:flex; flex-direction:column; gap:16px}
+h2{
+  margin:0; font-size:20px; font-weight:800; letter-spacing:-.02em;
+  display:flex; align-items:baseline; gap:10px; text-wrap:balance;
+}
+h2 .tag{
+  font-size:11px; font-weight:700; letter-spacing:.06em; padding:3px 9px; border-radius:20px;
+  background:var(--accent-soft); color:var(--accent); white-space:nowrap; letter-spacing:.02em;
+}
+h3{margin:0; font-size:16px; font-weight:700; letter-spacing:-.01em}
+p{margin:0}
+section > p, .card > p{max-width:64ch}
+strong{font-weight:700}
+a{color:var(--accent); text-underline-offset:3px}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.87em; background:var(--sunk); border:1px solid var(--line-soft);
+  padding:1px 6px; border-radius:5px; white-space:nowrap;
+}
+
+/* ── 진행 현황 ── */
+.ledger{
+  border:1px solid var(--line); border-radius:14px; background:var(--card);
+  overflow:hidden; box-shadow:var(--shadow);
+}
+.ledger-row{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px;
+  padding:13px 18px; border-bottom:1px solid var(--line-soft);
+}
+.ledger-row:last-child{border-bottom:0}
+.ledger-row .what{display:flex; flex-direction:column; gap:2px; min-width:0}
+.ledger-row .what b{font-weight:600; font-size:14.5px}
+.ledger-row .what span{font-size:12.5px; color:var(--faint)}
+.ledger-row.done{color:var(--muted)}
+.ledger-row.done .what b{font-weight:500}
+.ledger-row.todo{background:var(--amber-soft)}
+.ledger-row.todo .what b{font-weight:800; color:var(--text)}
+.ledger-row.todo .what span{color:var(--amber)}
+.dot{
+  width:22px; height:22px; border-radius:50%; display:grid; place-items:center;
+  font-size:12px; font-weight:800; flex:none;
+}
+.dot.ok{background:var(--green-soft); color:var(--green)}
+.dot.now{background:var(--amber); color:var(--card)}
+.state{
+  font-size:11.5px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
+  padding:3px 10px; border-radius:20px;
+}
+.state.ok{background:var(--green-soft); color:var(--green)}
+.state.now{background:var(--amber); color:var(--card)}
+@media (max-width:520px){
+  .ledger-row{grid-template-columns:auto 1fr; gap:11px; padding:12px 14px}
+  .ledger-row .state{grid-column:2; justify-self:start; margin-top:2px}
+}
+
+/* ── 카드 ── */
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:22px 24px; display:flex; flex-direction:column; gap:14px; box-shadow:var(--shadow);
+}
+@media (max-width:600px){ .card{padding:18px 16px} }
+.card.quiet{background:var(--sunk); box-shadow:none; border-style:dashed}
+.card.flag{border-color:var(--amber); background:var(--amber-soft)}
+.card.flag h3{color:var(--amber)}
+
+/* 역할 분담 */
+.who{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media (max-width:600px){ .who{grid-template-columns:1fr} }
+.who > div{
+  border:1px solid var(--line); border-radius:11px; padding:15px 16px;
+  background:var(--card); display:flex; flex-direction:column; gap:5px;
+}
+.who .role{
+  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
+}
+.who .task{font-size:15px; font-weight:700; line-height:1.5}
+.who .note{font-size:13px; color:var(--muted); line-height:1.6}
+
+/* ── 명령 블록 ── */
+.step{display:flex; flex-direction:column; gap:11px}
+.step-head{display:flex; align-items:center; gap:11px}
+.step-num{
+  flex:none; width:25px; height:25px; border-radius:7px; background:var(--accent);
+  color:#fff; font-size:13px; font-weight:800; display:grid; place-items:center;
+  font-variant-numeric:tabular-nums;
+}
+.cmd{position:relative; border-radius:11px; overflow:hidden; border:1px solid var(--line)}
+.cmd-bar{
+  display:flex; align-items:center; gap:10px; padding:8px 10px 8px 14px;
+  background:var(--sunk); border-bottom:1px solid var(--line);
+}
+.cmd-bar .where{
+  font-size:11.5px; font-weight:700; letter-spacing:.05em; color:var(--faint);
+  text-transform:uppercase; flex:1;
+}
+.copy{
+  font:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+  border:1px solid var(--line); background:var(--card); color:var(--muted);
+  padding:4px 11px; border-radius:7px; transition:color .15s, border-color .15s;
+}
+.copy:hover{color:var(--accent); border-color:var(--accent)}
+.copy.copied{color:var(--green); border-color:var(--green)}
+.copy:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+pre{
+  margin:0; background:var(--code-bg); color:var(--code-text); padding:15px 16px;
+  overflow-x:auto; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:13px; line-height:1.75; tab-size:2;
+}
+pre .c{color:var(--code-muted)}
+pre .k{color:#8fb8ff}
+
+/* ── 표 ── */
+.tw{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--card)}
+table{width:100%; border-collapse:collapse; font-size:14px; min-width:460px}
+th,td{text-align:left; padding:11px 15px; border-bottom:1px solid var(--line-soft); vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{
+  font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--faint); background:var(--sunk); white-space:nowrap;
+}
+td code{white-space:normal}
+td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px}
+
+/* ── 문답 ── */
+.qa{display:flex; flex-direction:column; gap:2px}
+.qa details{
+  border:1px solid var(--line); border-radius:11px; background:var(--card); overflow:hidden;
+}
+.qa details + details{margin-top:9px}
+.qa summary{
+  cursor:pointer; padding:14px 17px; font-weight:700; font-size:15px; list-style:none;
+  display:flex; align-items:flex-start; gap:11px; line-height:1.55;
+}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::before{
+  content:"?"; flex:none; width:21px; height:21px; margin-top:2px; border-radius:6px;
+  background:var(--accent-soft); color:var(--accent); font-size:12px; font-weight:800;
+  display:grid; place-items:center;
+}
+.qa summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.qa details[open] summary{border-bottom:1px solid var(--line-soft)}
+.qa .body{padding:14px 17px 17px 49px; font-size:14.5px; color:var(--muted); line-height:1.75}
+.qa .body p + p{margin-top:9px}
+.qa .body strong{color:var(--text)}
+@media (max-width:600px){ .qa .body{padding:13px 15px 15px 15px} }
+
+/* ── 접히는 참고 ── */
+.ref > summary{
+  cursor:pointer; list-style:none; font-size:14px; font-weight:700; color:var(--muted);
+  padding:13px 17px; border:1px dashed var(--line); border-radius:11px;
+  display:flex; align-items:center; gap:9px;
+}
+.ref > summary::-webkit-details-marker{display:none}
+.ref > summary::before{content:"▸"; color:var(--faint); font-size:12px}
+.ref[open] > summary{border-radius:11px 11px 0 0; border-bottom-style:solid; color:var(--text)}
+.ref[open] > summary::before{content:"▾"}
+.ref > summary:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.ref-body{
+  border:1px dashed var(--line); border-top:0; border-radius:0 0 11px 11px;
+  padding:20px 18px; display:flex; flex-direction:column; gap:16px;
+}
+
+/* ── 꼬리 ── */
+footer{
+  border-top:1px solid var(--line); padding-top:20px; font-size:13.5px; color:var(--faint);
+  display:flex; flex-direction:column; gap:5px;
+}
+footer a{font-weight:600}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="page">
+
+  <header class="mast">
+    <div class="eyebrow">맑은소프트 블로그 · 서버 요청</div>
+    <h1>서버에서 해주실 일이 하나 남았습니다</h1>
+    <p class="standfirst">
+      블로그 설치는 이미 끝났고 사이트는 정상 운영 중입니다. 관리자 화면에서 <b>글을 직접 쓰는 기능</b>이
+      새로 붙으면서, 파일 하나를 서버에 놓아주시는 작업만 남았습니다. 10분이면 끝납니다.
+    </p>
+    <div class="filed">
+      <span><b>대상</b> blog.malgnsoft.com</span>
+      <span><b>환경</b> Rocky 9.5 · Apache · Resin</span>
+      <span><b>작성</b> 2026-08-12</span>
+      <span><b>문의</b> 맑은소프트 sales@malgnsoft.com</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>지금까지의 진행 상황</h2>
+    <p style="color:var(--muted)">
+      기존 설치가이드는 <b>맨바닥에서 설치하는 전체 절차</b>라 분량이 많습니다.
+      그중 대부분은 이미 끝나 있습니다. 실제로 남은 것은 마지막 한 줄뿐입니다.
+    </p>
+    <div class="ledger">
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>디렉터리·권한</b><span>/home/blog 구성</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>사이트 내려받기</b><span>git으로 웹루트 구성</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>SELinux</b><span>정책 설정</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>Apache</b><span>가상호스트·프록시</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>Resin</b><span>웹앱 등록·조회수 수집</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row done"><span class="dot ok">✓</span>
+        <span class="what"><b>콘텐츠 갱신</b><span>관리자 [프로그램 갱신] 버튼 — 오늘 정상 동작 확인</span></span>
+        <span class="state ok">완료</span></div>
+      <div class="ledger-row todo"><span class="dot now">●</span>
+        <span class="what"><b>글쓰기 토큰 놓기</b><span>이번에 부탁드리는 작업</span></span>
+        <span class="state now">남음</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>무엇을, 왜 <span class="tag">쉬운 설명</span></h2>
+    <div class="card">
+      <h3>블로그 글의 원본은 서버가 아니라 GitHub에 있습니다</h3>
+      <p style="color:var(--muted)">
+        서버는 원본을 보관하지 않습니다. GitHub이라는 <b>원본 창고</b>에서 완성된 페이지를 받아다
+        보여주는 역할만 합니다. 지금까지는 <b>받아오기만</b> 했고, 창고가 공개라 열쇠가 필요 없었습니다.
+      </p>
+      <p style="color:var(--muted)">
+        이번에 관리자 화면에 <b>글쓰기 기능</b>이 붙었습니다. 글을 저장하면 그 원본 창고에 글을 <b>넣어야</b>
+        합니다. 넣으려면 쓰기 열쇠가 필요합니다. 그 열쇠가 <b>GitHub 토큰</b>이고,
+        서버가 읽을 수 있는 자리에 파일로 놓아주시면 됩니다.
+      </p>
+    </div>
+    <div class="card quiet">
+      <h3 style="font-size:14.5px">왜 서버에 바로 저장하지 않나요?</h3>
+      <p style="color:var(--muted); font-size:14.5px">
+        서버는 갱신할 때마다 <b>자기 내용을 창고 것으로 통째로 덮어씁니다</b>(<code>git reset --hard</code>).
+        서버에 직접 쓴 글은 다음 갱신 때 사라집니다. 그래서 창고에 먼저 넣고, 서버가 그걸 받아오는 순서여야 합니다.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>역할이 둘로 나뉩니다</h2>
+    <div class="who">
+      <div>
+        <span class="role">블로그 담당자</span>
+        <span class="task">GitHub에서 토큰 발급</span>
+        <span class="note">저장소 소유자만 할 수 있습니다. 발급한 값을 서버 담당자에게 안전한 방법으로 전달합니다.</span>
+      </div>
+      <div>
+        <span class="role">서버 담당자</span>
+        <span class="task">전달받은 값을 파일로 저장</span>
+        <span class="note">명령 3줄이면 끝납니다. 재기동도, 설정 변경도 필요 없습니다.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>① 토큰 발급 <span class="tag">블로그 담당자</span></h2>
+    <div class="card">
+      <p>GitHub에 로그인한 뒤 아래 순서로 들어갑니다.</p>
+      <p style="font-size:14.5px; color:var(--muted)">
+        <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>
+      </p>
+      <div class="tw">
+        <table>
+          <thead><tr><th>항목</th><th>지정할 값</th></tr></thead>
+          <tbody>
+            <tr><td>Repository access</td><td>Only select repositories → <code>freerahn6/malgnblog</code></td></tr>
+            <tr><td>Repository permissions</td><td><b>Contents: Read and write</b> — 나머지는 전부 No access</td></tr>
+            <tr><td>Expiration</td><td>만료일 지정. <b>만료 전에 새로 발급</b>해야 글 저장이 멈추지 않습니다</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:14.5px; color:var(--muted)">
+        발급 직후 화면에 한 번만 보이는 값을 복사해 두세요. 창을 닫으면 다시 볼 수 없습니다.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>② 서버에 놓기 <span class="tag">서버 담당자</span></h2>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1</span><h3>토큰을 파일로 저장</h3></div>
+      <p style="font-size:14.5px; color:var(--muted)">
+        아래를 붙여넣으면 값을 물어봅니다. 화면에 찍히지 않고 명령 기록에도 남지 않습니다.
+      </p>
+      <div class="cmd">
+        <div class="cmd-bar"><span class="where">서버 셸</span>
+          <button class="copy" type="button">복사</button></div>
+<pre><code>sudo -u blog bash -c 'read -rsp "GitHub 토큰: " T &amp;&amp; printf "%s\n" "$T" &gt; /home/blog/data/github.token'
+sudo chmod 600 /home/blog/data/github.token
+sudo chown blog:blog /home/blog/data/github.token</code></pre>
+      </div>
+      <p style="font-size:14px; color:var(--muted)">
+        <code>chown</code> 의 소유자는 <b>Resin을 실행하는 계정</b>이어야 합니다. Resin을 <code>blog</code> 가 아닌
+        계정으로 돌리고 계시면 그 계정 이름으로 바꿔주세요.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">2</span><h3>제대로 놓였는지 보기</h3></div>
+      <div class="cmd">
+        <div class="cmd-bar"><span class="where">서버 셸</span>
+          <button class="copy" type="button">복사</button></div>
+<pre><code>ls -l /home/blog/data/github.token</code></pre>
+      </div>
+      <p style="font-size:14px; color:var(--muted)">
+        <code>-rw-------</code> 로 시작하고 소유자가 Resin 실행 계정이면 정상입니다.
+      </p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><h3>실제로 통하는지 확인</h3></div>
+      <p style="font-size:14.5px; color:var(--muted)">
+        <b>관리자 비밀번호가 있어야 확인됩니다.</b> 비밀번호를 먼저 검사하기 때문에, 비번 없이 부르면
+        토큰이 있든 없든 늘 <code>unauthorized</code> 가 납니다(토큰이 있는지를 바깥에 알리지 않기 위해서입니다).
+      </p>
+      <div class="cmd">
+        <div class="cmd-bar"><span class="where">서버 셸</span>
+          <button class="copy" type="button">복사</button></div>
+<pre><code><span class="c"># 비밀번호는 /home/blog/data/admin.pw 의 값입니다</span>
+read -rsp '관리자 비밀번호: ' PW &amp;&amp; echo
+curl -s -X POST 'https://blog.malgnsoft.com/api/stats?write=1' \
+     -d "pw=$PW" -d 'action=get' -d 'file=what-is-lms.md' | head -c 200; echo
+unset PW</code></pre>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr><th>나온 값</th><th>뜻</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">{"ok":true,"file":…,"content":"---\ntitle:…</td>
+                <td><b style="color:var(--green)">정상.</b> 토큰이 잘 놓였고 GitHub까지 통했습니다</td></tr>
+            <tr><td class="mono">{"error":"no_token"}</td>
+                <td>파일이 없거나 Resin 계정이 못 읽습니다 → 1단계의 경로·권한·소유자를 다시 확인</td></tr>
+            <tr><td class="mono">{"error":"unauthorized"}</td>
+                <td>비밀번호가 틀렸습니다. 토큰 문제가 아닙니다</td></tr>
+            <tr><td class="mono">{"error":"github_unavailable"}</td>
+                <td>토큰은 읽혔으나 GitHub 호출이 실패. <code>detail</code> 값과 Resin 로그를 알려주세요</td></tr>
+            <tr><td class="mono">{"error":"write_disabled"}</td>
+                <td><code>web.xml</code> 의 <code>writeEnabled</code> 가 <code>false</code> 입니다</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>함께 부탁드립니다 <span class="tag">보안</span></h2>
+    <div class="card flag">
+      <h3>관리자 비밀번호가 아직 <code>gamma</code> 라면 이번에 꼭 바꿔주세요</h3>
+      <p>
+        기본값 <code>gamma</code> 는 공개 저장소의 설정 파일에 적혀 있어 사실상 공개된 값입니다.
+        지금까지 그 비밀번호로 열리는 것은 조회수 통계뿐이었지만, <b>이제는 그 비밀번호로 블로그 글을 쓰고
+        고칠 수 있습니다.</b> 성격이 달라졌습니다.
+      </p>
+      <div class="cmd">
+        <div class="cmd-bar"><span class="where">서버 셸</span>
+          <button class="copy" type="button">복사</button></div>
+<pre><code>sudo -u blog tee /home/blog/data/admin.pw &lt;&lt;&lt; '길고-추측-불가능한-비밀번호'
+sudo chmod 600 /home/blog/data/admin.pw</code></pre>
+      </div>
+      <p style="font-size:14px">
+        관리자 화면 <b>주소와는 다른 값</b>으로 정해주세요. 주소가 곧 비밀번호면 의미가 없습니다.
+        바꾸신 뒤 블로그 담당자에게 새 값을 전달해 주시면 됩니다.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>미리 답해 두는 질문</h2>
+    <div class="qa">
+      <details>
+        <summary>이 토큰으로 무엇까지 할 수 있나요? 서버가 위험해지나요?</summary>
+        <div class="body">
+          <p>서버에 대한 권한은 <strong>전혀 없습니다.</strong> 이 토큰은 GitHub의 <strong>블로그 저장소 한 곳</strong>에서
+          파일을 읽고 쓸 수 있을 뿐입니다. 계정 전체나 다른 저장소에는 닿지 않습니다(Fine-grained 토큰으로
+          대상 저장소와 권한을 못 박아 발급합니다).</p>
+          <p>최악의 경우에도 피해는 <strong>블로그 글이 변조되는 것</strong>이고, 모든 변경이 GitHub에 커밋 기록으로
+          남아 되돌릴 수 있습니다.</p>
+        </div>
+      </details>
+      <details>
+        <summary>토큰 값이 밖으로 새지 않나요?</summary>
+        <div class="body">
+          <p>브라우저로는 <strong>절대 나가지 않습니다.</strong> 서버의 JSP가 파일에서 직접 읽어 GitHub에 보낼 뿐이고,
+          화면·응답·로그 어디에도 값을 찍지 않습니다.</p>
+          <p>파일은 웹루트(<code>public_html</code>) <strong>바깥</strong>인 <code>/home/blog/data</code> 에 두므로
+          웹으로 요청해도 접근되지 않고, <code>0600</code> 이라 다른 계정도 읽지 못합니다.</p>
+        </div>
+      </details>
+      <details>
+        <summary>서버가 바깥으로 통신하게 되는 건가요?</summary>
+        <div class="body">
+          <p>네, 다만 <strong>글을 저장할 때만</strong> <code>api.github.com:443</code> 으로 나가는 아웃바운드 HTTPS 한 건입니다.
+          이미 사이트 갱신 때 <code>github.com:443</code> 으로 나가고 있어 통신 상대가 새로 늘지는 않습니다.</p>
+          <p>인바운드 포트는 그대로 <strong>80/443뿐</strong>이고, 새로 여는 포트는 없습니다.</p>
+        </div>
+      </details>
+      <details>
+        <summary>안 하면 어떻게 되나요?</summary>
+        <div class="body">
+          <p>사이트·조회수·[프로그램 갱신] 버튼은 <strong>지금과 똑같이 동작합니다.</strong>
+          관리자 화면에서 글을 저장할 때만 "토큰 없음"으로 막힙니다. 급하지 않으시면 나중에 하셔도 됩니다.</p>
+        </div>
+      </details>
+      <details>
+        <summary>나중에 끄고 싶으면요?</summary>
+        <div class="body">
+          <p>토큰 파일을 지우면 즉시 막힙니다. 기능 자체를 잠그려면
+          <code>public_html/WEB-INF/web.xml</code> 의 <code>writeEnabled</code> 를 <code>false</code> 로 두시면 됩니다.</p>
+          <p>참고로 누가 언제 무엇을 저장했는지는 <code>/home/blog/data/admin.log</code> 에 한 줄씩 쌓입니다.</p>
+        </div>
+      </details>
+      <details>
+        <summary>재기동이 필요한가요? 서비스가 끊기나요?</summary>
+        <div class="body">
+          <p>둘 다 아닙니다. 파일을 놓기만 하면 다음 요청부터 바로 반영됩니다.
+          Apache·Resin 재기동도, 설정 변경도 필요 없습니다.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <h2>잘 안 될 때</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>증상</th><th>확인할 것</th></tr></thead>
+        <tbody>
+          <tr><td><code>no_token</code> 이 계속 나옴</td>
+              <td>파일 경로가 <code>/home/blog/data/github.token</code> 인지, 소유자가 <b>Resin 실행 계정</b>인지.
+                  값 뒤에 빈 줄이 아니라 진짜 토큰이 들어갔는지(<code>wc -c</code> 로 길이 확인)</td></tr>
+          <tr><td><code>github_unavailable</code> · TLS/SSL 오류</td>
+              <td>Resin이 쓰는 JDK가 낡아 GitHub의 TLS 1.2를 못 맞추는 경우입니다.
+                  <code>java -version</code> 결과를 알려주시면 대응하겠습니다</td></tr>
+          <tr><td><code>github_unavailable</code> · 401·403</td>
+              <td>토큰이 만료됐거나 권한이 <b>Contents: Read and write</b> 가 아닙니다. 재발급이 필요합니다</td></tr>
+          <tr><td>확인 명령이 응답 없음</td>
+              <td>Apache의 <code>/api/</code> 프록시와 Resin 기동 상태.
+                  <code>curl -sI https://blog.malgnsoft.com/</code> 가 200인지 먼저 확인</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="ref">
+    <summary>참고 — 이미 끝난 설치 내용과 서버에서 도는 것들</summary>
+    <div class="ref-body">
+      <p style="font-size:14.5px; color:var(--muted)">
+        아래는 이번에 하실 일이 아니라 <b>현재 상태의 기록</b>입니다. 전체 원문은 저장소의
+        <code>deploy/서버담당자-설치가이드.md</code> 에 있습니다.
+      </p>
+
+      <div>
+        <h3 style="margin-bottom:9px">서버에서 실행되는 JSP 5개</h3>
+        <div class="tw">
+          <table>
+            <thead><tr><th>파일</th><th>하는 일</th><th>필요한 권한</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">track.jsp</td><td>조회수 +1</td><td>데이터 파일 쓰기</td></tr>
+              <tr><td class="mono">stats.jsp</td><td>집계·글목록 반환(비밀번호 필요)</td><td>읽기만</td></tr>
+              <tr><td class="mono">posts.jsp</td><td>글 메타 반환(비밀번호 필요)</td><td>읽기만</td></tr>
+              <tr><td class="mono">update.jsp</td><td>[프로그램 갱신] — git 실행</td><td>프로세스 실행(고정 인자·셸 미경유)</td></tr>
+              <tr><td class="mono">write.jsp</td><td>글 저장 — GitHub에 커밋</td><td>아웃바운드 HTTPS + 토큰 읽기</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:13.5px; color:var(--muted); margin-top:9px">
+          전부 <code>WEB-INF</code> 아래라 주소로 직접 호출되지 않습니다. DB에 접속하지 않고, 파일을 지우지 않습니다.
+          소스는 공개 저장소에서 그대로 보실 수 있습니다.
+        </p>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:9px">경로</h3>
+        <div class="tw">
+          <table>
+            <tbody>
+              <tr><td class="mono">/home/blog</td><td>git 루트 (웹에 노출되지 않음)</td></tr>
+              <tr><td class="mono">/home/blog/public_html</td><td>웹루트 — 갱신 때 원격 내용으로 덮어써집니다</td></tr>
+              <tr><td class="mono">/home/blog/data</td><td>조회수·비밀번호·토큰·감사로그. <b>git이 건드리지 않는 영역</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:9px">글이 사이트에 뜨기까지</h3>
+        <p style="font-size:14.5px; color:var(--muted)">
+          관리자 화면에서 저장 → GitHub에 커밋 → GitHub이 자동 빌드·검증(1~3분) →
+          담당자가 <b>[프로그램 갱신]</b> 을 누르면 서버가 받아옴 → 사이트 반영.
+          <b>검증에 실패한 결과물은 서버로 내려오지 않습니다.</b>
+        </p>
+      </div>
+    </div>
+  </details>
+
+  <footer>
+    <span>맑은소프트 블로그 운영 · blog.malgnsoft.com</span>
+    <span>문의 <a href="mailto:sales@malgnsoft.com">sales@malgnsoft.com</a> · 전체 절차 원문은 저장소 <code>deploy/</code> 폴더</span>
+  </footer>
+
+</div>
+
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var pre = btn.closest('.cmd').querySelector('pre');
+    var text = pre.innerText.split('\n').filter(function(l){
+      return l.trim().indexOf('#') !== 0;      // 설명 주석 줄은 빼고 복사한다
+    }).join('\n').trim();
+    function done(){
+      var was = btn.textContent;
+      btn.textContent = '복사됨';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = was; btn.classList.remove('copied'); }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { btn.textContent = '복사 실패'; }
+      ta.remove();
+    }
+  });
+});
+</script>
