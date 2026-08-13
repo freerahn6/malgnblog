@@ -642,6 +642,74 @@ os.makedirs(f"{OUT}/{ADMIN_PATH}",exist_ok=True)
 open(f"{OUT}/{ADMIN_PATH}/index.html",'w',encoding='utf-8').write(ADMIN)
 print(f"admin dashboard 생성: /{ADMIN_PATH}/")
 
+# ---- /refresh — 로그인 없이 [프로그램 갱신]만 있는 페이지 ----
+# 2026-08-12 장애의 교훈: 갱신 버튼이 관리자 로그인 뒤에 있으면, 로그인을 못 하게 됐을 때
+# 사이트 반영을 되살릴 방법이 사라진다(그때는 서버 담당자를 찾아야 했다). 그래서 갱신만
+# 떼어 공개 페이지로 둔다. 서버쪽 짝은 web.xml 의 refreshOpen=true (끄면 이 페이지는 401).
+REFRESH=r"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>프로그램 갱신 · 맑은소프트 블로그</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;
+--ok:#17795e;--ok-bg:#e2f3ec;--bad:#c4343a;--bad-bg:#fdeaea;--code-bg:#131a27;--code-fg:#e6ecf6}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;
+--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--ok:#3ecf8e;--ok-bg:#14301f;--bad:#ff6b6f;--bad-bg:#3a1f22;
+--code-bg:#0a0f18;--code-fg:#e6ecf6}}
+:root[data-theme="dark"]{--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;--muted:#93a0b4;--line:#273043;
+--accent:#5b8cff;--ok:#3ecf8e;--ok-bg:#14301f;--bad:#ff6b6f;--bad-bg:#3a1f22;--code-bg:#0a0f18;--code-fg:#e6ecf6}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;
+-webkit-font-smoothing:antialiased;word-break:keep-all}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:34px 30px;
+width:100%;max-width:460px;box-shadow:0 10px 40px rgba(20,30,50,.10);text-align:center}
+h1{font-size:19px;margin:0 0 6px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;line-height:1.65}
+button{width:100%;padding:15px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+button:disabled{opacity:.55;cursor:default}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.msg{margin-top:16px;font-size:14px;font-weight:700;line-height:1.6;min-height:20px}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}.msg.wait{color:var(--muted)}
+.hint{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.7}
+pre{display:none;margin:16px 0 0;padding:13px 14px;background:var(--code-bg);color:var(--code-fg);
+border-radius:10px;text-align:left;font-size:12px;line-height:1.6;max-height:260px;overflow:auto;
+font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-all}
+</style></head><body>
+<div class="card">
+  <h1>프로그램 갱신</h1>
+  <p class="sub">GitHub에 올라간 최신 내용을 서버로 받아옵니다.<br>새 글을 발행한 뒤 이 버튼을 누르면 사이트에 반영됩니다.</p>
+  <button id="go" type="button">갱신하기</button>
+  <div class="msg" id="msg"></div>
+  <pre id="out"></pre>
+  <p class="hint">한 번에 1분까지 걸릴 수 있습니다. 누른 뒤 기다려 주세요.</p>
+</div>
+<script>
+var go=document.getElementById('go'),msg=document.getElementById('msg'),out=document.getElementById('out');
+function say(t,c){msg.textContent=t;msg.className='msg '+(c||'')}
+go.addEventListener('click',function(){
+  go.disabled=true;out.style.display='none';out.textContent='';say('갱신 중… (최대 1분)','wait');
+  fetch('/api/update',{method:'POST'}).then(function(r){
+    return r.text().then(function(t){var d={};try{d=JSON.parse(t)}catch(e){}return {s:r.status,d:d,t:t}})
+  }).then(function(x){
+    if(x.s===200&&x.d.ok){say('완료 — 사이트에 반영됐습니다.','ok')}
+    else if(x.s===401){say('이 서버에서는 공개 갱신이 꺼져 있습니다. 관리자 콘솔에서 갱신해 주세요.','bad')}
+    else if(x.s===403){say('갱신 기능이 꺼져 있습니다 (updateEnabled=false).','bad')}
+    else if(x.s===405){say('잘못된 요청 방식입니다.','bad')}
+    else if(x.s===409){say('이미 갱신이 진행 중입니다. 잠시 후 다시 눌러 주세요.','bad')}
+    else if(x.s===404){say('서버의 갱신 기능에 연결하지 못했습니다 (404). 서버 담당자 확인이 필요합니다.','bad')}
+    else {say('갱신 실패 (HTTP '+x.s+')','bad')}
+    var body=(x.d&&x.d.output)?x.d.output:(x.s===200?'':x.t);
+    if(body){out.textContent=body;out.style.display='block'}
+  }).catch(function(){
+    say('서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.','bad')
+  }).then(function(){go.disabled=false});
+});
+</script></body></html>"""
+os.makedirs(f"{OUT}/refresh",exist_ok=True)
+open(f"{OUT}/refresh/index.html",'w',encoding='utf-8').write(REFRESH)
+print("공개 갱신 페이지 생성: /refresh/")
+
 # ---- Resin 웹앱(WEB-INF) 동봉 — 조회수 수집 /api/track·/api/stats ----
 # 정적 HTML과 함께 웹루트로 배포된다. Resin이 WEB-INF 아래를 직접 서빙하지는 않는다.
 # 조용히 건너뛰면 안 된다 — 빠진 채로 배포되면 서버의 WEB-INF가 지워져 /api/*가 죽는다.
