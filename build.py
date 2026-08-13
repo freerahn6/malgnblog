@@ -722,6 +722,18 @@ if os.path.isdir(_dst): _sh.rmtree(_dst)
 _sh.copytree(_srv,_dst)
 print("WEB-INF 동봉: 조회수 API(JSP)")
 
+# ---- 다운로드 자료 동봉 — /files/ ----
+# 본문에서 내려받게 하는 실제 파일(카탈로그 PDF 등). 이미지처럼 data URI 로 녹이지 않는다 —
+# 수 MB 짜리 PDF 를 HTML 에 넣으면 글만 읽으려는 방문자도 매번 그걸 다 받는다.
+# 본문 링크는 상대경로 `/files/{파일명}` 으로 쓴다. 파일명은 ASCII 로만 — 한글 파일명은
+# 서버·브라우저 인코딩에 따라 링크가 깨진다.
+_fsrc=BASE+"/files"
+if os.path.isdir(_fsrc):
+    _fdst=f"{OUT}/files"
+    if os.path.isdir(_fdst): _sh.rmtree(_fdst)
+    _sh.copytree(_fsrc,_fdst)
+    print("다운로드 자료 동봉: /files/ :", ", ".join(sorted(os.listdir(_fsrc))))
+
 # ---- 관리자 콘솔(/gamma2) 매니페스트 posts.json ----
 # 발행글 + 비게시(draft)글 '메타만' 모아 웹루트 WEB-INF 안에 쓴다.
 #  · WEB-INF copytree '이후'에 써야 덮이지 않는다(위 rmtree/copytree가 먼저 도는 이유).
