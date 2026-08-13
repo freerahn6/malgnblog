@@ -104,7 +104,11 @@
     return;
   }
 
-  if (!pwEquals(request.getParameter("pw"), adminPw(ctx))) {
+  // 공개 갱신 페이지(/refresh)용. refreshOpen 이 true 면 비밀번호 없이도 실행을 허용한다.
+  // 열어도 하는 일은 "최신본 받기" 하나뿐이다 — 명령은 고정(git fetch/reset)이고 사용자 입력이
+  // 섞이지 않으며, 원본 저장소가 공개라 git 출력에도 비밀이 없다. 잠그려면 이 값을 false 로.
+  boolean refreshOpen = "true".equals(initParam(ctx, "refreshOpen", "false"));
+  if (!refreshOpen && !pwEquals(request.getParameter("pw"), adminPw(ctx))) {
     response.setStatus(401);
     out.print("{\"error\":\"unauthorized\"}");
     return;

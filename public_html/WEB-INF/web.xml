@@ -18,13 +18,13 @@
 
   <display-name>malgnblog</display-name>
 
-  <!-- deploy-rev: 2026-08-13a
+  <!-- deploy-rev: 2026-08-13b
        이 값을 바꾸면 web.xml 내용이 달라져 git reset 시 mtime이 갱신되고,
        Resin(redeploy-mode automatic)이 웹앱을 리로드해 변경된 JSP를 재컴파일한다.
        JSP만 수정한 배포가 서버에 반영되지 않을 때(구 컴파일본 서빙) 이 값을 올린다. -->
   <context-param>
     <param-name>deployRev</param-name>
-    <param-value>2026-08-13a</param-value>
+    <param-value>2026-08-13b</param-value>
   </context-param>
 
   <!-- 집계 파일을 둘 디렉터리. 웹루트 밖이어야 한다(외부 노출·git reset 영향 차단).
@@ -63,6 +63,15 @@
   <!-- 갱신 기능 전체 스위치. 잠그려면 false 로. -->
   <context-param>
     <param-name>updateEnabled</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <!-- 공개 갱신 페이지(/refresh) 허용 스위치.
+       true 면 /api/update 가 비밀번호 없이도 실행된다 — 관리자 로그인이 막혔을 때도
+       사이트 반영을 되살릴 수 있게 하려는 것이다(2026-08-12 장애 후 신설).
+       실행 명령은 고정(git fetch/reset)이라 열려 있어도 하는 일은 "최신본 받기" 하나뿐이다.
+       잠그려면 false 로 — 그러면 관리자 콘솔의 갱신 버튼만 남는다. -->
+  <context-param>
+    <param-name>refreshOpen</param-name>
     <param-value>true</param-value>
   </context-param>
 
