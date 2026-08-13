@@ -22,6 +22,30 @@ INQ="https://www.malgnsoft.com/cloud/inquiry.jsp#stickyMenu"
 SCRIPT=re.findall(r'<script>.*?</script>',art_html,re.S)[-1]
 COVERS=re.findall(r'class="cover-img"[^>]*src="(data:image/jpeg;base64,[^"]+)"',idx_html)
 IMG=json.load(open(_D+'/img_map.json',encoding='utf-8'))
+
+# ---- 공유 카드 이미지(og:image) — /assets/og/{slug}.jpg ----
+# 카카오톡·텔레그램 같은 SNS 크롤러는 data URI 를 읽지 못한다. 커버는 HTML 안에 인라인돼
+# 있어서 화면에는 보이지만 공유 카드로는 못 쓴다 — 그래서 실제 파일로 한 벌 더 써 준다.
+# (2026-08-13 이전에는 og:image 가 회사 로고 GIF 로 고정돼 있어, 어떤 글을 공유해도
+#  카드에 로고만 나갔다.)
+#  · 형식은 JPEG 고정 — 커버 원본이 webp 인 글이 섞여 있는데 카카오 크롤러가 webp 를 못 읽는다.
+#  · 크롤러는 절대 URL 만 받는다. 본문 이미지와 달리 상대경로를 쓰면 안 된다.
+#  · 파일명은 slug(영문·하이픈)라 인코딩 문제가 없다.
+import base64, io
+from PIL import Image as _PILImage
+OGDIR=f"{OUT}/assets/og"; os.makedirs(OGDIR,exist_ok=True)
+def _og_write(name,datauri):
+    im=_PILImage.open(io.BytesIO(base64.b64decode(datauri.split(',',1)[1]))).convert('RGB')
+    im.save(f"{OGDIR}/{name}.jpg",'JPEG',quality=86,optimize=True,progressive=True)
+    return im.size
+OGSIZE={s:_og_write(s,u) for s,u in IMG.items()}
+# 커버가 등록되지 않은 글은 본문 상단에서 COVERS[1]을 쓴다 — 공유 카드도 같은 그림으로 맞춘다.
+OGSIZE['_default']=_og_write('_default',COVERS[1])
+def og_of(slug):
+    k=slug if slug in IMG else '_default'
+    return f"{SITE}/assets/og/{k}.jpg", OGSIZE[k]
+print("공유 카드 이미지:",len(OGSIZE),"개 ->",f"{OGDIR}/")
+
 NAMECARDS=json.load(open(_D+'/namecards.json',encoding='utf-8'))
 FIGMAP=json.load(open(_D+'/figmap.json',encoding='utf-8'))
 BANL=open(_D+'/wecandeo_datauri.txt',encoding='utf-8').read().strip()
@@ -243,7 +267,7 @@ def jsonld(a,url):
     blocks=[{"@context":"https://schema.org","@type":"Article","headline":a['title'],"description":a.get('description',''),
       "datePublished":a.get('date',''),"dateModified":a.get('date',''),"inLanguage":"ko-KR",
       "author":{"@type":"Person","name":a.get('author','교육운영 노트')},"publisher":PUBLISHER,
-      "image":"https://www.malgnsoft.com/img/og_logo.gif","mainEntityOfPage":{"@type":"WebPage","@id":url}},
+      "image":og_of(a['slug'])[0],"mainEntityOfPage":{"@type":"WebPage","@id":url}},
      {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"홈","item":SITE+"/"},
       {"@type":"ListItem","position":2,"name":CATL[a['category']],"item":f"{SITE}/{a['category']}/"},
@@ -257,7 +281,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 <title>{title} — 맑은소프트 블로그</title><meta name="description" content="{desc}">
 <link rel="canonical" href="https://blog.malgnsoft.com/{cat}/{slug}/">
 <link rel="alternate" type="application/rss+xml" title="맑은소프트 블로그 RSS" href="https://blog.malgnsoft.com/rss.xml">
-<meta property="og:type" content="article"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="https://blog.malgnsoft.com/{cat}/{slug}/"><meta property="og:site_name" content="맑은소프트 블로그"><meta property="og:image" content="https://www.malgnsoft.com/img/og_logo.gif"><meta property="article:published_time" content="{date}"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:type" content="article"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="https://blog.malgnsoft.com/{cat}/{slug}/"><meta property="og:site_name" content="맑은소프트 블로그"><meta property="og:image" content="{ogimg}"><meta property="og:image:width" content="{ogw}"><meta property="og:image:height" content="{ogh}"><meta property="og:image:alt" content="{title}"><meta property="article:published_time" content="{date}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{ogimg}">
 {jsonld}
 <style>{css}{extra}</style></head><body>
 <div class="progress" id="progress"></div>
@@ -311,7 +335,9 @@ for a in arts:
     _ritems=''.join(f'<li><a href="/{x["category"]}/{x["slug"]}/"><span class="rl-cat">{CATL[x["category"]]}</span><span class="rl-title">{H.escape(x["title"])}</span><span class="rl-date">{x.get("date","").replace("-",".")}</span></a></li>' for x in _recent)
     recentlist=f'<section class="recentlist"><h2>최신 글</h2><ul>{_ritems}</ul></section>'
     _url=f"{SITE}/{a['category']}/{a['slug']}/"
-    page=PAGE.format(title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
+    _ogimg,(_ogw,_ogh)=og_of(a['slug'])
+    page=PAGE.format(ogimg=_ogimg,ogw=_ogw,ogh=_ogh,
+        title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
         catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),herofig=herofig,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
         aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK,nav=navhtml(a['category']))
