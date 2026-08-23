@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://blog.malgnsoft.com/</loc><lastmod>2026-08-21</lastmod><changefreq>daily</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/all/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/all/page/2/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/all/page/3/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/news/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/lms/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/hrd/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/certification/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/video/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
-  <url><loc>https://blog.malgnsoft.com/edutech/</loc><lastmod>2026-08-21</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/</loc><lastmod>2026-08-24</lastmod><changefreq>daily</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/all/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/all/page/2/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/all/page/3/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/news/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/lms/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/hrd/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/certification/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/video/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/edutech/</loc><lastmod>2026-08-24</lastmod><changefreq>weekly</changefreq></url>
   <url><loc>https://blog.malgnsoft.com/lms/lms-selection-guide-for-corporate-training/</loc><lastmod>2026-06-23</lastmod><changefreq>monthly</changefreq></url>
   <url><loc>https://blog.malgnsoft.com/hrd/refund-training-lms-operation-guide/</loc><lastmod>2026-06-24</lastmod><changefreq>monthly</changefreq></url>
   <url><loc>https://blog.malgnsoft.com/certification/certification-system-build-guide/</loc><lastmod>2026-06-25</lastmod><changefreq>monthly</changefreq></url>
@@ -56,4 +56,5 @@
   <url><loc>https://blog.malgnsoft.com/hrd/training-content-copyright-guide/</loc><lastmod>2026-08-19</lastmod><changefreq>monthly</changefreq></url>
   <url><loc>https://blog.malgnsoft.com/edutech/generative-ai-training-content/</loc><lastmod>2026-08-20</lastmod><changefreq>monthly</changefreq></url>
   <url><loc>https://blog.malgnsoft.com/lms/credit-bank-institution-guide/</loc><lastmod>2026-08-21</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://blog.malgnsoft.com/lms/multi-client-lms-operation/</loc><lastmod>2026-08-24</lastmod><changefreq>monthly</changefreq></url>
 </urlset>
