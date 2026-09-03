@@ -27,3 +27,6 @@ temp/
 # Python 바이트코드
 __pycache__/
 *.pyc
+
+# 크래시 덤프
+*.stackdump
