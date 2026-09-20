@@ -1,13 +1,13 @@
 ---
 title: "고용보험 환급과정, LMS로 이렇게 운영한다 — 수강신청부터 수료증까지"
 description: "고용보험 환급과정을 LMS로 운영하는 전 과정을 정리했습니다. 과정개설·연수관리 준비부터 진도·시험·과제, 수료판정과 수료증 발급, 정산·통계 보고까지 담당자가 그대로 따라 할 실무 가이드."
-category: "hrd"
+category: hrd
 slug: "refund-training-lms-operation-guide"
 tags: ["고용보험 환급과정", "환급 LMS", "기업교육 운영"]
 date: 2026-06-24
 updated: 2026-06-24
 author: 한다현
-funnel: "MOFU"
+funnel: MOFU
 cluster: "B"
 thumbnail: "/assets/img/hrd/refund-training-lms-operation-guide/cover.webp"
 faq:
