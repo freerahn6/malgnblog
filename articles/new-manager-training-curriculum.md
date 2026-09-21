@@ -5,7 +5,6 @@ category: hrd
 cluster: B
 slug: new-manager-training-curriculum
 funnel: TOFU
-draft: true
 tags: [신임팀장 교육, 팀장 교육 커리큘럼, 신임 관리자 교육, 관리자 교육 설계, 첫 90일]
 date: 2026-09-21
 updated: 2026-09-21
