@@ -5,6 +5,7 @@ category: lms
 cluster: A
 slug: credit-bank-institution-guide
 funnel: TOFU
+draft: true  # 2026-09-22 노출 제외: 마스터 지시
 tags: [학점은행제, 평가인정, 교육훈련기관, 원격수업기관, 학점인정, 평생교육 LMS]
 date: 2026-08-21
 updated: 2026-08-21
