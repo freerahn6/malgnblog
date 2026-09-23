@@ -528,6 +528,18 @@ _robots="User-agent: *\nAllow: /\n\n"+"".join(f"User-agent: {b}\nAllow: /\n\n" f
 open(f"{OUT}/robots.txt",'w',encoding='utf-8').write(_robots)
 print("sitemap.xml:",len(entries),"urls | robots.txt")
 
+# ---- llms.txt — AI 크롤러용 사이트 안내문 ----
+# 원본은 저장소 루트의 llms.txt. _deploy/public/ 은 빌드마다 새로 만들어지고 .gitignore 에
+# 걸려 있어서, 결과물에 직접 넣어둔 파일은 다음 빌드에 사라진다 → 여기서 매번 복사한다.
+# sitemap.xml·robots.txt 와 달리 생성물이 아니라 사람이 쓰는 문서라 손으로 고친다.
+# 정본은 C:/job/project/aio/files/llms-blog.txt (www·help 도메인 것과 같이 관리).
+_llms=BASE+"/llms.txt"
+if os.path.isfile(_llms):
+    open(f"{OUT}/llms.txt",'w',encoding='utf-8',newline='').write(open(_llms,encoding='utf-8',newline='').read())
+    print("llms.txt 동봉:",os.path.getsize(_llms),"bytes")
+else:
+    print("[경고] llms.txt 없음 — /llms.txt 가 404 가 된다")
+
 # ---- RSS 피드 (네이버 웹마스터도구·구독기용) ----
 import datetime as _dt
 _WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']; _MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -801,6 +813,450 @@ _gen=max([(_p.get('updated') or _p.get('date',''))
 _manifest={"generated":(_gen+' KST').strip(),"count":len(_manifest_posts),"posts":_manifest_posts}
 open(f"{_dst}/posts.json",'w',encoding='utf-8').write(json.dumps(_manifest,ensure_ascii=False))
 print("posts.json 매니페스트:",len(_manifest_posts),"posts(비게시·예약 포함) ->",f"{_dst}/posts.json")
+
+# ---- 글감 보드(/new) — 카탈로그 동봉 + 페이지 생성 ----
+# 마스터 지시: "새 글감을 발굴하면 /new 에 리스트업하고, 원하지 않는 주제는 삭제할 수 있게.
+#              서버 저장하고 내가 삭제할 때까지 영구적으로 저장."
+#  · 카탈로그(_data/topics.json)는 WEB-INF 아래로 넣는다 — 브라우저가 직접 못 읽는다.
+#    /new 는 비번을 확인한 /api/stats?topics=1 로만 목록을 받는다(HTML 에 굽지 않는다.
+#    공개 URL 이라 view-source 로 콘텐츠 파이프라인이 통째로 노출되기 때문).
+#  · WEB-INF copytree '이후'에 써야 덮이지 않는다(posts.json 과 같은 이유).
+#  · 삭제 기록은 여기 없다. 서버의 /home/blog/data/topics-deleted.json 에 쌓인다 —
+#    웹루트 밖이라 update.jsp 의 `git reset --hard` 가 건드리지 않는다(= 영구 저장).
+import hashlib as _hl
+_tsrc=BASE+"/_data/topics.json"
+_tdoc=None
+if os.path.isfile(_tsrc):
+    try:
+        _tdoc=json.load(open(_tsrc,encoding='utf-8'))
+        if not isinstance(_tdoc,dict) or not isinstance(_tdoc.get('topics'),list):
+            raise ValueError('최상위가 {"generated":..,"topics":[..]} 모양이 아닙니다')
+    except Exception as _te:
+        _tdoc=None
+        # 여기서 빌드를 멈추지 않는다 — 곁다리 화면 하나 때문에 블로그 배포 전체를 막을 수는 없다.
+        # 대신 카탈로그를 비워 내보내고, /new 는 "카탈로그가 비었다"를 화면에 그대로 말한다.
+        print(f"[경고] _data/topics.json 을 읽지 못했습니다({_te}) — /new/ 가 빈 목록으로 나갑니다")
+else:
+    print("[안내] _data/topics.json 없음 — /new/ 는 빈 목록으로 생성된다(파일이 생기면 다음 빌드에 실린다)")
+
+_TKEYS=("id","title","category","funnel","author","priority","status","source","why","blocker")
+_trows=[]; _tseen=set()
+for _ti,_t in enumerate((_tdoc or {}).get('topics',[])):
+    if not isinstance(_t,dict):
+        print(f"[경고] topics.json {_ti+1}번 항목이 오브젝트가 아닙니다 — 건너뜁니다"); continue
+    _row={}
+    for _k in _TKEYS:
+        _v=_t.get(_k,"")
+        _row[_k]="" if _v is None else (_v if isinstance(_v,str) else str(_v))
+    _id=_row["id"].strip()
+    # id 는 삭제 기록의 열쇠다. 없거나 서버 상한(64자)을 넘으면 삭제 버튼이 동작하지 않으므로
+    # 제목 해시로 대체 id 를 만든다. 단 제목이 바뀌면 id 도 바뀌어 삭제 기록이 풀린다
+    # → 카탈로그에 id 를 명시하는 편이 옳다. 그래서 경고를 남긴다.
+    if (not _id) or len(_id)>64 or any(ord(_c)<0x20 for _c in _id):
+        _new="t-"+_hl.sha1((_row["title"] or str(_ti)).encode('utf-8')).hexdigest()[:10]
+        print(f"[경고] topics.json {_ti+1}번 id 가 비었거나 부적합 → 대체 id {_new} (제목이 바뀌면 삭제 기록이 풀린다)")
+        _id=_new
+    if _id in _tseen:
+        print(f"[경고] topics.json id 중복: {_id} — 하나를 지우면 같은 id 가 전부 사라진다")
+    _tseen.add(_id); _row["id"]=_id
+    _trows.append(_row)
+_tout={"generated":str((_tdoc or {}).get('generated',"")),"count":len(_trows),"topics":_trows}
+open(f"{_dst}/topics.json",'w',encoding='utf-8').write(json.dumps(_tout,ensure_ascii=False))
+print("topics.json 글감 카탈로그:",len(_trows),"건 ->",f"{_dst}/topics.json")
+
+NEWPAGE=r"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>글감 보드 · 맑은소프트 블로그</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#1a2233;--muted:#6b7688;--line:#e6e9f0;--accent:#2563eb;
+--ok:#17795e;--ok-bg:#e2f3ec;--bad:#c4343a;--bad-bg:#fdeaea;--warn:#8a5a00;--warn-bg:#fdf3e2;
+--info:#1d4ed8;--info-bg:#e7edfd;--soft:#eef1f6}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1420;--card:#161d2b;--text:#e7ecf3;
+--muted:#93a0b4;--line:#273043;--accent:#5b8cff;--ok:#3ecf8e;--ok-bg:#14301f;--bad:#ff6b6f;--bad-bg:#3a1f22;
+--warn:#f0b357;--warn-bg:#33270f;--info:#8fb0ff;--info-bg:#17203a;--soft:#1c2536}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Malgun Gothic',sans-serif;
+-webkit-font-smoothing:antialiased;word-break:keep-all;font-size:15px;line-height:1.6}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:900px;margin:0 auto;padding:22px 16px 80px}
+/* 로그인 */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.gatecard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px 28px;
+width:100%;max-width:400px;text-align:center}
+.gatecard h1{font-size:19px;margin:0 0 6px;font-weight:800;letter-spacing:-.02em}
+.gatecard p{color:var(--muted);font-size:13.5px;margin:0 0 20px}
+.gatecard input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:10px;
+background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;margin-bottom:10px}
+.gatecard input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.gatecard button{width:100%;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#fff;
+font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.err{color:var(--bad);font-size:13px;margin-top:10px;min-height:18px;font-weight:700}
+/* 머리말 */
+.top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.top h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.02em}
+.top .sp{flex:1}
+.btn{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:8px;
+padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+/* 거르개 */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.chip{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:999px;
+padding:6px 13px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+select{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:8px;
+padding:6px 10px;font-size:13px;font-family:inherit}
+/* 목록 */
+.row{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+border-radius:12px;padding:14px 16px;margin-bottom:8px;transition:opacity .18s ease}
+.row.gone{opacity:0}
+.row .main{flex:1;min-width:0}
+.ttl{font-size:15.5px;font-weight:700;letter-spacing:-.01em;line-height:1.45}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:7px;font-size:12.5px;color:var(--muted)}
+.tag{background:var(--soft);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.why{margin:8px 0 0;font-size:13.5px;color:var(--muted);line-height:1.6}
+.blk{margin:7px 0 0;font-size:12.5px;color:var(--warn);background:var(--warn-bg);
+border-radius:8px;padding:6px 10px;line-height:1.55}
+.src{margin:6px 0 0;font-size:12px;color:var(--muted);opacity:.85}
+.badge{border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;white-space:nowrap;
+border:1px solid transparent}
+.b-wait{background:var(--soft);color:var(--muted);border-color:var(--line)}
+.b-writing{background:var(--info-bg);color:var(--info);border-color:var(--info)}
+.b-live{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.b-reject{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.b-etc{background:var(--soft);color:var(--muted);border-color:var(--line)}
+.del{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--muted);
+border-radius:8px;padding:6px 11px;font-size:13px;cursor:pointer;font-family:inherit}
+.del:hover{border-color:var(--bad);color:var(--bad);background:var(--bad-bg)}
+.del:disabled{opacity:.4;cursor:default}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:28px 16px;
+text-align:center;color:var(--muted);font-size:13.5px;line-height:1.7}
+/* 휴지통 */
+.trashwrap{margin-top:26px}
+.trashhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.trashhead h2{font-size:14px;margin:0;font-weight:700;color:var(--muted)}
+.trow{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);
+border-radius:10px;padding:9px 13px;margin-bottom:6px;font-size:13.5px;color:var(--muted)}
+.trow .tt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undo{flex:0 0 auto;background:var(--card);border:1px solid var(--line);color:var(--accent);
+border-radius:8px;padding:5px 11px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700}
+/* 알림 */
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:none;gap:12px;
+align-items:center;background:var(--text);color:var(--bg);border-radius:10px;padding:11px 14px;
+font-size:13.5px;max-width:calc(100vw - 32px);box-shadow:0 8px 28px rgba(15,23,42,.28)}
+#toast.show{display:flex}
+#toast .tmsg{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#toast button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:7px;
+padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex:0 0 auto}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:560px){
+ .row{flex-direction:column;gap:10px}
+ .del{align-self:flex-end}
+ .wrap{padding:16px 12px 80px}
+}
+</style></head><body>
+
+<div id="gate"><form class="gatecard" id="gform">
+  <div style="font-size:28px;margin-bottom:6px">🗂️</div>
+  <h1>글감 보드</h1>
+  <p>블로그 관리자 비밀번호를 입력하세요</p>
+  <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password" autofocus>
+  <button type="submit">열기</button>
+  <div class="err" id="err"></div>
+</form></div>
+
+<main id="board" style="display:none"><div class="wrap">
+  <div class="top">
+    <h1>🗂️ 글감 보드</h1>
+    <span class="sp"></span>
+    <button class="btn" id="reload" type="button">새로고침</button>
+    <button class="btn" id="logout" type="button">나가기</button>
+  </div>
+  <p class="sub" id="counts"></p>
+
+  <div class="filters">
+    <span id="statusChips"></span>
+    <select id="catSel" aria-label="카테고리 거르기"></select>
+  </div>
+
+  <div id="rows"></div>
+
+  <section class="trashwrap" id="trashwrap" style="display:none">
+    <div class="trashhead">
+      <h2>휴지통</h2>
+      <button class="btn" id="trashToggle" type="button" aria-expanded="false">펼치기</button>
+    </div>
+    <div id="trashRows" style="display:none"></div>
+  </section>
+</div></main>
+
+<div id="toast"><span class="tmsg" id="toastMsg"></span><button type="button" id="toastBtn">실행취소</button></div>
+
+<script>
+/* 글감 보드 — 목록은 HTML 에 굽지 않는다. 공개 URL 이라 view-source 로 전부 보이기 때문에
+   비밀번호를 확인한 /api/stats?topics=1 응답으로만 그린다.
+   삭제는 POST(본문에 비번) — 쿼리스트링에 실으면 액세스로그에 평문으로 남는다. */
+var PW = null, DATA = null, FS = '전체', FC = '전체', undoId = null;
+var STATUSES = ['전체', '대기', '집필중', '발행', '반려'];
+var BADGE = {'대기': 'b-wait', '집필중': 'b-writing', '발행': 'b-live', '반려': 'b-reject'};
+
+function $(id) { return document.getElementById(id) }
+function esc(s) {
+  return (s == null ? '' : '' + s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+/* ── 통신 ───────────────────────────────────────────────── */
+function loadBoard(pw) {
+  return fetch('/api/stats?topics=1&pw=' + encodeURIComponent(pw), { headers: { 'Accept': 'application/json' } })
+    .then(function (r) {
+      if (r.status === 401) throw new Error('auth');
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      PW = pw; sessionStorage.setItem('bpw', pw);
+      DATA = d;
+      if (!DATA.topics) DATA.topics = [];
+      if (!DATA.trash) DATA.trash = [];
+      if (!DATA.orphan) DATA.orphan = [];
+      $('gate').style.display = 'none';
+      $('board').style.display = 'block';
+      renderAll();
+    });
+}
+
+function send(op, id) {
+  var body = 'pw=' + encodeURIComponent(PW) + '&id=' + encodeURIComponent(id);
+  return fetch('/api/stats?topics=' + op, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: body
+  }).then(function (r) {
+    return r.text().then(function (t) {
+      var d = {};
+      try { d = JSON.parse(t) } catch (e) { }
+      if (r.status === 401) throw new Error('인증이 만료됐습니다. 새로고침 후 다시 로그인하세요.');
+      if (!r.ok || !d.ok) throw new Error(d.detail || d.error || ('서버 오류 ' + r.status));
+      return d;
+    });
+  });
+}
+
+/* ── 그리기 ─────────────────────────────────────────────── */
+function renderAll() { renderFilters(); renderRows(); renderTrash(); renderCounts(); }
+
+function renderCounts() {
+  var n = DATA.topics.length, t = DATA.trash.length + DATA.orphan.length;
+  var s = '글감 <b class="num">' + n + '</b>건';
+  if (t) s += ' · 휴지통 <b class="num">' + t + '</b>건';
+  if (DATA.generated) s += ' · 카탈로그 ' + esc(DATA.generated);
+  $('counts').innerHTML = s;
+}
+
+function renderFilters() {
+  var seen = {}, cats = [];
+  for (var i = 0; i < DATA.topics.length; i++) {
+    var c = DATA.topics[i].category || '';
+    if (c && !seen[c]) { seen[c] = 1; cats.push(c) }
+  }
+  cats.sort();
+  var h = '';
+  for (var j = 0; j < STATUSES.length; j++) {
+    h += '<button class="chip" type="button" data-st="' + esc(STATUSES[j]) + '" aria-pressed="'
+      + (STATUSES[j] === FS ? 'true' : 'false') + '">' + esc(STATUSES[j]) + '</button> ';
+  }
+  $('statusChips').innerHTML = h;
+  var o = '<option value="전체">카테고리 전체</option>';
+  for (var k = 0; k < cats.length; k++) {
+    o += '<option value="' + esc(cats[k]) + '"' + (cats[k] === FC ? ' selected' : '') + '>'
+      + esc(cats[k]) + '</option>';
+  }
+  $('catSel').innerHTML = o;
+}
+
+function pass(t) {
+  if (FS !== '전체' && (t.status || '') !== FS) return false;
+  if (FC !== '전체' && (t.category || '') !== FC) return false;
+  return true;
+}
+
+function rowHtml(t) {
+  var st = t.status || '';
+  var cls = BADGE[st] || 'b-etc';
+  var h = '<article class="row" data-id="' + esc(t.id) + '"><div class="main">';
+  h += '<div class="ttl">' + esc(t.title || '(제목 없음)') + '</div>';
+  h += '<div class="meta"><span class="badge ' + cls + '">' + esc(st || '상태 없음') + '</span>';
+  if (t.category) h += '<span class="tag">' + esc(t.category) + '</span>';
+  if (t.funnel) h += '<span class="tag">' + esc(t.funnel) + '</span>';
+  if (t.author) h += '<span class="tag">' + esc(t.author) + '</span>';
+  if (t.priority) h += '<span class="tag num">우선 ' + esc(t.priority) + '</span>';
+  h += '</div>';
+  if (t.why) h += '<p class="why">' + esc(t.why) + '</p>';
+  if (t.blocker) h += '<p class="blk">막힌 것 · ' + esc(t.blocker) + '</p>';
+  if (t.source) h += '<p class="src">출처 ' + esc(t.source) + '</p>';
+  h += '</div><button class="del" type="button">삭제</button></article>';
+  return h;
+}
+
+function renderRows() {
+  var list = [], i;
+  for (i = 0; i < DATA.topics.length; i++) if (pass(DATA.topics[i])) list.push(DATA.topics[i]);
+  if (!list.length) {
+    var msg;
+    if (DATA.catalog === false) {
+      msg = '서버에 글감 카탈로그가 없습니다.<br>빌드가 <code>WEB-INF/topics.json</code> 을 올린 뒤 다시 열어 보세요.';
+    } else if (!DATA.topics.length) {
+      msg = '아직 글감이 없습니다.<br>발굴한 글감이 <code>_data/topics.json</code> 에 실려 배포되면 여기 나타납니다.';
+    } else {
+      msg = '거르개에 걸리는 글감이 없습니다.';
+    }
+    $('rows').innerHTML = '<div class="empty">' + msg + '</div>';
+    return;
+  }
+  var h = '';
+  for (i = 0; i < list.length; i++) h += rowHtml(list[i]);
+  $('rows').innerHTML = h;
+}
+
+function renderTrash() {
+  var n = DATA.trash.length + DATA.orphan.length;
+  $('trashwrap').style.display = n ? 'block' : 'none';
+  if (!n) return;
+  $('trashToggle').textContent = ($('trashRows').style.display === 'none' ? '펼치기 (' + n + ')' : '접기');
+  var h = '', i;
+  for (i = 0; i < DATA.trash.length; i++) {
+    h += '<div class="trow" data-id="' + esc(DATA.trash[i].id) + '"><span class="tt">'
+      + esc(DATA.trash[i].title || DATA.trash[i].id) + '</span>'
+      + '<button class="undo" type="button">복구</button></div>';
+  }
+  for (i = 0; i < DATA.orphan.length; i++) {
+    h += '<div class="trow" data-id="' + esc(DATA.orphan[i]) + '" data-orphan="1"><span class="tt">'
+      + esc(DATA.orphan[i]) + ' <em>(카탈로그에 없는 기록)</em></span>'
+      + '<button class="undo" type="button">기록 지우기</button></div>';
+  }
+  $('trashRows').innerHTML = h;
+}
+
+/* ── 알림(실행취소) ─────────────────────────────────────── */
+var toastTimer = null;
+function toast(msg, id) {
+  undoId = id;
+  $('toastMsg').textContent = msg;
+  $('toastBtn').style.display = id ? 'block' : 'none';
+  $('toast').className = 'show';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, id ? 7000 : 4000);
+}
+function hideToast() { $('toast').className = ''; undoId = null; }
+
+/* ── 삭제 / 복구 ────────────────────────────────────────── */
+function indexById(arr, id) {
+  for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return i;
+  return -1;
+}
+
+function doDelete(id, rowEl) {
+  var i = indexById(DATA.topics, id);
+  if (i < 0) return;
+  var t = DATA.topics[i];
+  if (!window.confirm('이 글감을 지웁니다.\n\n' + (t.title || id)
+      + '\n\n지운 글감은 휴지통에서 되살릴 수 있습니다.')) return;
+  var btn = rowEl ? rowEl.querySelector('.del') : null;
+  if (btn) btn.disabled = true;
+  send('del', id).then(function () {
+    DATA.topics.splice(i, 1);
+    DATA.trash.unshift(t);
+    /* 전체를 다시 그리지 않는다 — 지운 그 행만 걷어낸다.
+       걷어낸 뒤 목록이 비면 그때만 빈 상태 안내로 바꾼다. */
+    if (rowEl) rowEl.className = 'row gone';
+    setTimeout(function () {
+      if (rowEl && rowEl.parentNode) rowEl.parentNode.removeChild(rowEl);
+      if (!$('rows').querySelector('.row')) renderRows();
+    }, 200);
+    renderCounts(); renderTrash();
+    toast('「' + (t.title || id) + '」 삭제됨', id);
+  }).catch(function (e) {
+    if (btn) btn.disabled = false;
+    toast('삭제 실패 — ' + e.message, null);
+  });
+}
+
+function doRestore(id) {
+  send('undel', id).then(function () {
+    var i = indexById(DATA.trash, id);
+    if (i >= 0) { DATA.topics.unshift(DATA.trash[i]); DATA.trash.splice(i, 1); }
+    var j = DATA.orphan.indexOf(id);
+    if (j >= 0) DATA.orphan.splice(j, 1);
+    hideToast();
+    renderAll();
+  }).catch(function (e) { toast('복구 실패 — ' + e.message, null); });
+}
+
+/* ── 이벤트 ─────────────────────────────────────────────── */
+$('gform').addEventListener('submit', function (e) {
+  e.preventDefault();
+  $('err').textContent = '';
+  loadBoard($('pw').value).catch(function (err) {
+    $('err').textContent = (err && err.message === 'auth')
+      ? '비밀번호가 올바르지 않습니다.' : '목록을 불러오지 못했습니다. 잠시 후 다시 시도하세요.';
+  });
+});
+
+$('rows').addEventListener('click', function (e) {
+  var btn = e.target;
+  if (!btn || btn.className !== 'del') return;
+  var row = btn.parentNode;
+  if (!row) return;
+  doDelete(row.getAttribute('data-id'), row);
+});
+
+$('trashRows').addEventListener('click', function (e) {
+  var btn = e.target;
+  if (!btn || btn.className !== 'undo') return;
+  var row = btn.parentNode;
+  if (!row) return;
+  doRestore(row.getAttribute('data-id'));
+});
+
+$('trashToggle').addEventListener('click', function () {
+  var box = $('trashRows');
+  var open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  renderTrash();
+});
+
+$('statusChips').addEventListener('click', function (e) {
+  var st = e.target && e.target.getAttribute && e.target.getAttribute('data-st');
+  if (!st) return;
+  FS = st; renderFilters(); renderRows();
+});
+
+$('catSel').addEventListener('change', function () { FC = this.value; renderRows(); });
+
+$('reload').addEventListener('click', function () {
+  if (PW) loadBoard(PW).catch(function () { toast('새로고침 실패', null) });
+});
+
+$('logout').addEventListener('click', function () {
+  sessionStorage.removeItem('bpw');
+  location.reload();
+});
+
+$('toastBtn').addEventListener('click', function () { if (undoId) doRestore(undoId); });
+
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideToast(); });
+
+(function () {
+  var pw = sessionStorage.getItem('bpw');
+  if (pw) loadBoard(pw).catch(function () { sessionStorage.removeItem('bpw') });
+})();
+</script></body></html>
+"""
+os.makedirs(f"{OUT}/new",exist_ok=True)
+open(f"{OUT}/new/index.html",'w',encoding='utf-8').write(NEWPAGE)
+print("글감 보드 생성: /new/")
 
 # ---- 새 관리자 콘솔(시안) 동봉 — /{ADMIN2_PATH}/ ----
 # admin-console/시안-p2-관리자콘솔.html 을 COO 검토용으로 새 관리자 경로에 서빙한다.
