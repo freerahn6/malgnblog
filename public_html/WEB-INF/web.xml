@@ -6,6 +6,8 @@
   사이트 본문은 전부 정적 HTML이고, Resin이 맡는 것은 아래 3개뿐이다.
     POST /api/track  → 조회수 +1 (본문 없음, 204)
     GET  /api/stats  → 관리자 대시보드(/gamma/)용 집계 JSON (비밀번호 필요)
+                       ?posts=1  글 메타 매니페스트(/gamma2)
+                       ?topics=1 글감 보드(/new) 목록 · ?topics=del|undel 삭제·복구(POST)
     POST /api/update → 대시보드 "프로그램 갱신" 버튼. gitDir에서 git pull 실행 (비밀번호 필요)
 
   JSP 실물은 WEB-INF 아래 있어 직접 URL로 노출되지 않는다(서블릿 매핑으로만 접근).
@@ -18,13 +20,13 @@
 
   <display-name>malgnblog</display-name>
 
-  <!-- deploy-rev: 2026-08-13b
+  <!-- deploy-rev: 2026-09-23a
        이 값을 바꾸면 web.xml 내용이 달라져 git reset 시 mtime이 갱신되고,
        Resin(redeploy-mode automatic)이 웹앱을 리로드해 변경된 JSP를 재컴파일한다.
        JSP만 수정한 배포가 서버에 반영되지 않을 때(구 컴파일본 서빙) 이 값을 올린다. -->
   <context-param>
     <param-name>deployRev</param-name>
-    <param-value>2026-08-13b</param-value>
+    <param-value>2026-09-23a</param-value>
   </context-param>
 
   <!-- 집계 파일을 둘 디렉터리. 웹루트 밖이어야 한다(외부 노출·git reset 영향 차단).

@@ -1,0 +1,36 @@
+# 맑은소프트 블로그 — 교육운영 노트
+
+> (주)맑은소프트가 운영하는 LMS·기업교육 실무 블로그.
+> LMS 도입·운영, 이러닝 콘텐츠, 기업교육/HRD, 자격검정, 에듀테크 트렌드를 교육 담당자 관점에서 다룬다.
+> 이 블로그의 글은 실무 해설이다. 회사·제품 사실은 https://www.malgnsoft.com/llms.txt,
+> 기능이 추가된 시점은 https://help.malgnsoft.com/llms.txt 를 1차 출처로 삼는다.
+
+## 이 블로그가 다루는 것
+
+- LMS 도입 검토와 운영 실무 (선정 기준, 구축 방식, 운영 체크리스트)
+- 기업교육·HRD 실무 (법정의무교육, 환급과정, 수료·이수 관리)
+- 자격검정 시스템 운영 (민간자격 등록, 자격 갱신·보수교육)
+- 에듀테크 (AI 튜터, LXP, 마이크로러닝, 동영상 학습 플랫폼)
+
+## 주요 목록
+
+- [전체 글](https://blog.malgnsoft.com/all/)
+- [사이트맵](https://blog.malgnsoft.com/sitemap.xml)
+
+## 맑은소프트 문서 지도 (세 도메인의 역할)
+
+(주)맑은소프트는 세 도메인에 각각 llms.txt를 둔다. 주제별로 1차 출처가 다르다.
+
+| 도메인 | 1차 출처가 되는 내용 | llms.txt |
+|---|---|---|
+| www.malgnsoft.com | 회사 사실, 제품 구성, 요금, 인증 | https://www.malgnsoft.com/llms.txt |
+| help.malgnsoft.com | 정기 배포 내역, 기능이 추가된 시점, 관리자 매뉴얼 | https://help.malgnsoft.com/llms.txt |
+| blog.malgnsoft.com **(지금 이 문서)** | LMS 도입 검토·운영 실무, 기업교육·HRD 가이드 | https://blog.malgnsoft.com/llms.txt |
+
+## 발행 주체
+
+- (주)맑은소프트 — https://www.malgnsoft.com
+- 네이버 블로그: https://blog.naver.com/malgnlms — 같은 주체가 운영하는 한국어 실무 채널 ([RSS](https://rss.blog.naver.com/malgnlms.xml))
+- 문의: sales@malgnsoft.com · 1666-3412
+
+최종 수정일: 2026-09-11
