@@ -95,6 +95,9 @@ td .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
 .badge.sched{background:var(--amber-soft);color:var(--amber)}
 .badge.trash{background:var(--red-soft);color:var(--red)}
 .badge.pending{background:var(--amber-soft);color:var(--amber)}
+/* 글감(대기중) 상태 — 집필중만 새로 필요하다. 나머지는 위 배지를 그대로 쓴다
+   (발행=pub · 대기=draft · 반려=trash). 새 색을 만들지 않고 기존 토큰만 쓴다. */
+.badge.writing{background:var(--accent-soft);color:var(--accent)}
 .funnel{font-size:11px;font-weight:700;color:var(--muted)}
 /* ---------- 필터바 ---------- */
 .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
@@ -243,6 +246,7 @@ td .sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
       <a href="#/stats" data-route="stats">통계</a>
       <a href="#/posts" data-route="posts">글관리</a>
       <a href="#/scheduled" data-route="scheduled">예약글<span class="navcount" id="navsched" hidden></span></a>
+      <a href="#/pending" data-route="pending">대기중<span class="navcount" id="navpending" hidden></span></a>
     </nav>
     <span class="sp"></span>
     <button class="iconbtn" id="themebtn" title="테마 전환" aria-label="테마 전환">🌗</button>
@@ -275,6 +279,16 @@ var DAYS=[];                 // STATS.days (통계 화면이 참조)
 var TODAY="";                // STATS.date (KST)
 var DATASTATE="loading";     // loading | ok | error  (empty는 각 화면이 실데이터로 판단)
 var DEV="normal";            // (구 상태-시연 잔재. 항상 normal — 아래 화면들의 DEV 분기는 비활성)
+/* ---- 글감(대기중) ----
+   /api/stats?topics=1 → {ok,catalog,generated,count,trashCount,topics[],trash[],orphan[]}
+   카탈로그는 빌드가 WEB-INF/topics.json 으로 올리고(브라우저 직접 접근 차단),
+   삭제 기록은 서버 /home/blog/data/topics-deleted.json 에 쌓인다 — 배포가 돌아도 안 지워진다.
+   이 화면이 하는 일은 '받아 그리기'와 '지우기/되살리기' 둘뿐이다. */
+var TOPICS=[];               // 살아 있는 글감
+var TOPICS_TRASH=[];         // 지운 글감(휴지통 — 되살릴 수 있다)
+var TOPICS_ORPHAN=[];        // 카탈로그에서 사라졌는데 삭제 기록만 남은 id
+var TOPICS_GEN="";           // 카탈로그 생성일
+var TOPICS_STATE="loading";  // loading | ok | nocatalog | unavailable
 
 function buildData(stats,manifest){
   STATS=stats||{today:0,total:0,days:[],posts:[],date:""};
@@ -292,18 +306,42 @@ function buildData(stats,manifest){
       body_html:p.body_html||""};
   });
 }
-// 두 API를 함께 부른다. 401이면 code=401 로 던져 게이트 복귀에 쓴다.
+// 글감 응답을 화면이 쓰는 모양으로. 서버가 카탈로그 원소를 원문 그대로 돌려주므로
+// 필드는 _data/topics.json 의 것 그대로다(전부 문자열 — build.py 가 맞춰 둔다).
+function buildTopics(t,status){
+  TOPICS=[];TOPICS_TRASH=[];TOPICS_ORPHAN=[];TOPICS_GEN="";
+  // 서버가 이 분기를 모르면(구 JSP) topics 파라미터를 무시하고 조회수 JSON 을 돌려준다.
+  // 그때는 t.ok 가 없다 → '아직 준비 안 됨'으로 조용히 떨어뜨린다. 콘솔 나머지는 그대로 돈다.
+  if(!t||!t.ok||!t.topics){TOPICS_STATE='unavailable';return;}
+  var norm=function(x){
+    return {id:(x&&x.id)||"",title:(x&&x.title)||"",category:(x&&x.category)||"",
+      funnel:(x&&x.funnel)||"",author:(x&&x.author)||"",priority:(x&&x.priority)||"",
+      status:(x&&x.status)||"",source:(x&&x.source)||"",why:(x&&x.why)||"",
+      blocker:(x&&x.blocker)||""};
+  };
+  TOPICS=t.topics.map(norm);
+  TOPICS_TRASH=(t.trash||[]).map(norm);
+  TOPICS_ORPHAN=(t.orphan||[]).slice();
+  TOPICS_GEN=t.generated||"";
+  TOPICS_STATE=(t.catalog===false)?'nocatalog':'ok';
+}
+// 세 API를 함께 부른다. 401이면 code=401 로 던져 게이트 복귀에 쓴다.
+// 글감(topics)은 실패해도 로그인을 막지 않는다 — 곁다리 화면 하나 때문에 콘솔 전체가
+// 안 열리면 안 된다. 그래서 이 fetch 만 catch 로 감싸 null 로 떨어뜨린다.
 function loadData(){
   return Promise.all([
     fetch('/api/stats?pw='+encodeURIComponent(PW)),
-    fetch('/api/stats?pw='+encodeURIComponent(PW)+'&posts=1')
+    fetch('/api/stats?pw='+encodeURIComponent(PW)+'&posts=1'),
+    fetch('/api/stats?topics=1&pw='+encodeURIComponent(PW)).catch(function(){return null})
   ]).then(function(res){
-    var sr=res[0],pr=res[1];
+    var sr=res[0],pr=res[1],tr=res[2];
     if(sr.status===401||pr.status===401){var e=new Error('unauthorized');e.code=401;throw e;}
     if(!sr.ok){var e2=new Error('stats '+sr.status);e2.code=sr.status;throw e2;}
     if(!pr.ok){var e3=new Error('posts '+pr.status);e3.code=pr.status;throw e3;}
-    return Promise.all([sr.json(),pr.json()]);
-  }).then(function(j){buildData(j[0],j[1]);});
+    return Promise.all([sr.json(),pr.json(),
+      (tr&&tr.ok)?tr.json().catch(function(){return null}):null,
+      tr?tr.status:0]);
+  }).then(function(j){buildData(j[0],j[1]);buildTopics(j[2],j[3]);});
 }
 
 /* =========================================================================
@@ -346,9 +384,26 @@ function scheduledPosts(){
               .sort(function(a,b){return (kstParse(a.publish_at)||0)-(kstParse(b.publish_at)||0)});
 }
 function updateNavCounts(){
-  var n=$('navsched'); if(!n)return;
-  var c=POSTS.filter(function(p){return p.status==='scheduled'}).length;
-  n.textContent=c; n.hidden=(c===0);
+  var n=$('navsched');
+  if(n){
+    var c=POSTS.filter(function(p){return p.status==='scheduled'}).length;
+    n.textContent=c; n.hidden=(c===0);
+  }
+  // 글감은 '대기' 상태 건수만 배지로 센다(발행·반려까지 세면 늘 큰 숫자라 신호가 안 된다)
+  var g=$('navpending');
+  if(g){ var t=pendingTopics().length; g.textContent=t; g.hidden=(t===0); }
+}
+// 손대야 할 글감 = status 가 '대기'인 것. 메뉴 이름(대기중)과 같은 기준이다.
+function pendingTopics(){
+  return TOPICS.filter(function(t){return t.status==='대기'});
+}
+/* 글감 상태 배지. 색만으로 구분하지 않도록 기호+글자를 같이 둔다.
+   새 색을 만들지 않고 글 상태 배지(pub·draft·trash)와 .badge.writing 만 쓴다. */
+function topicBadge(st){
+  var b={'발행':['pub','● 발행'],'집필중':['writing','✍ 집필중'],
+         '대기':['draft','◌ 대기'],'반려':['trash','✕ 반려']}[st];
+  if(!b)return '<span class="badge draft">'+esc(st||'상태 없음')+'</span>';
+  return '<span class="badge '+b[0]+'">'+b[1]+'</span>';
 }
 function toast(msg,kind){
   var t=document.createElement('div');t.className='toast'+(kind?' '+kind:'');
@@ -446,6 +501,7 @@ function route(){
   if(DATASTATE==='error'){v.innerHTML='<div class="panel errbox"><div class="big">⚠️</div>데이터를 불러오지 못했습니다.<br><button class="btn primary" style="margin-top:14px" onclick="manualReload()">다시 시도</button></div>';window.scrollTo(0,0);return;}
   if(r.path==='dashboard')renderDashboard(v);
   else if(r.path==='scheduled')renderScheduled(v);
+  else if(r.path==='pending')renderPending(v);
   else if(r.path==='stats')renderStats(v);
   else if(r.path==='posts'&&r.sub==='edit')renderEdit(v,r.q.file);
   else if(r.path==='posts'&&r.sub==='new')renderEdit(v,null);
@@ -491,6 +547,7 @@ function renderDashboard(v){
   var pub=POSTS.filter(function(p){return p.status==='published'}).length;
   var drafts=POSTS.filter(function(p){return p.status==='draft'}).length;
   var sched=POSTS.filter(function(p){return p.status==='scheduled'}).length;
+  var pend=pendingTopics().length;
   var head='<div class="pagehead"><h1>대시보드</h1><span class="meta">'+(TODAY||'-')+' 기준 (KST)</span><span class="sp"></span>'+
     '<button class="btn" onclick="manualReload()">↻ 새로고침</button></div>';
   var empty=(POSTS.length===0);
@@ -499,7 +556,9 @@ function renderDashboard(v){
     '<div class="stat"><div class="lbl">누적 조회수</div><div class="val">'+(empty?'0':fmt(STATS.total))+'</div><div class="sub">전체 기간</div></div>'+
     '<div class="stat"><div class="lbl">게시물 수</div><div class="val">'+(empty?'0':fmt(pub))+'</div><div class="sub">게시중</div></div>'+
     '<div class="stat"><div class="lbl">비게시 수</div><div class="val">'+(empty?'0':fmt(drafts))+'</div>'+
-      '<div class="sub">'+(sched?'<a href="#/scheduled">예약 '+fmt(sched)+'편 대기중</a>':'draft')+'</div></div>'+
+      '<div class="sub">'+(sched?'<a href="#/scheduled">예약 '+fmt(sched)+'편 대기중</a>':'draft')+'</div>'+
+      // 글감은 원고가 아니라 '아직 안 쓴 주제'다. 예약글 줄 바로 아래에 같은 결로 한 줄 둔다.
+      (pend?'<div class="sub"><a href="#/pending">글감 '+fmt(pend)+'건 대기중</a></div>':'')+'</div>'+
     '</div>';
   var update='<div class="panel"><h2>프로그램 갱신</h2>'+
     '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">'+
@@ -509,6 +568,7 @@ function renderDashboard(v){
   var shortcuts='<div class="panel"><h2>바로가기</h2><div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn primary" onclick="location.hash=\'#/posts\'">📝 글관리</button>'+
     '<button class="btn" onclick="location.hash=\'#/scheduled\'">🕘 예약글'+(sched?' ('+fmt(sched)+')':'')+'</button>'+
+    '<button class="btn" onclick="location.hash=\'#/pending\'">🗂️ 대기중'+(pend?' ('+fmt(pend)+')':'')+'</button>'+
     '<button class="btn" onclick="location.hash=\'#/stats\'">📊 통계</button>'+
     '<button class="btn primary" onclick="location.hash=\'#/posts/new\'">＋ 새 글 작성</button>'+
     '</div></div>';
@@ -648,6 +708,215 @@ function renderScheduled(v){
     '· 예약을 미루거나 취소하려면 원고의 <code>publish_at</code> 을 고칩니다.'+
     '</div></div>';
   v.innerHTML=head+table+note;
+}
+
+/* =========================================================================
+   화면 3c — 대기중 (글감)
+     아직 원고가 아닌 '발굴한 주제'들. 원고(POSTS)와 저장소가 완전히 다르다 —
+     카탈로그는 빌드가 올린 WEB-INF/topics.json 이고, 지운 기록만 서버에 쌓인다.
+
+     정렬은 카탈로그 순서(= b1 이 매긴 우선순위) 하나뿐이다. 예약글 화면과 같은 방침 —
+     이 화면에서 "무엇부터 쓸까"의 답은 큐레이션 순서이지 정렬 놀이가 아니다.
+
+     지우는 길은 하나(삭제)지만 되돌리는 길은 둘이다: 확인창에서 취소, 그리고 휴지통에서 복구.
+   ========================================================================= */
+var TF={status:'대기',cat:'all',author:'all',funnel:'all',q:''};
+var TSHOWTRASH=false;
+
+function findTopic(id){
+  var a=TOPICS.filter(function(t){return t.id===id})[0];
+  return a||TOPICS_TRASH.filter(function(t){return t.id===id})[0];
+}
+function idxTopic(arr,id){
+  for(var i=0;i<arr.length;i++)if(arr[i].id===id)return i;
+  return -1;
+}
+/* onclick 속성에 id 를 심을 때 쓴다. JS 문자열로 먼저 막고(역슬래시·따옴표),
+   그 결과를 HTML 속성으로 한 번 더 막는다. 순서를 바꾸면 이스케이프가 풀린다. */
+function jsq(s){return esc((s+'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"));}
+
+/* 삭제/복구 API. 비밀번호는 반드시 POST 본문으로 — 쓰기 권한이 붙은 요청의 비번이
+   액세스로그에 평문으로 남지 않게 한다(글 저장 apiWrite 와 같은 규약). */
+function apiTopic(op,id){
+  var pw=PW||sessionStorage.getItem('bpw');
+  if(!pw){var e0=new Error('unauthorized');e0.code=401;return Promise.reject(e0);}
+  var b=new URLSearchParams();
+  b.set('pw',pw);b.set('id',id);
+  return fetch('/api/stats?topics='+op,{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:b.toString()
+  }).then(function(r){
+    return r.text().then(function(t){
+      var d={};try{d=JSON.parse(t)}catch(e){}
+      if(r.status===401){var e1=new Error('unauthorized');e1.code=401;throw e1;}
+      if(!r.ok||!d.ok){var e2=new Error(d.detail||d.error||('서버 오류 '+r.status));e2.code=r.status;throw e2;}
+      return d;
+    });
+  });
+}
+function topicErr(err){
+  if(err&&err.code===401){doLogout();toast('세션이 만료되었습니다. 다시 로그인하세요.','bad');return;}
+  toast((err&&err.message)||'요청에 실패했습니다.','bad');
+}
+// 글감만 다시 받는다(복구처럼 카탈로그 순서를 되살려야 할 때). 조회수·매니페스트는 건드리지 않는다.
+function reloadTopics(){
+  var pw=PW||sessionStorage.getItem('bpw');
+  return fetch('/api/stats?topics=1&pw='+encodeURIComponent(pw))
+    .then(function(r){return (r&&r.ok)?r.json().catch(function(){return null}):null})
+    .then(function(d){buildTopics(d,0);updateNavCounts();drawTopicTable();});
+}
+
+function topicDelete(id){
+  var t=findTopic(id); if(!t)return;
+  openModal('<h3>이 글감을 지울까요?</h3>'+
+    '<p><b style="color:var(--text)">'+esc(t.title||id)+'</b><br><br>'+
+    '목록에서 사라지고 <b>서버에 기록</b>됩니다 — 배포가 돌아도 다시 나타나지 않습니다.<br>'+
+    '아래 <b>휴지통</b>에서 언제든 되살릴 수 있습니다.</p>'+
+    '<div class="acts"><button class="btn" onclick="closeModal()">취소</button>'+
+    '<button class="btn danger" onclick="topicDeleteGo(\''+jsq(id)+'\')">삭제</button></div>');
+}
+function topicDeleteGo(id){
+  closeModal();
+  apiTopic('del',id).then(function(){
+    // 지운 것만 목록에서 휴지통으로 옮기고 표를 다시 그린다 — 서버에 목록을 다시 묻지 않는다.
+    var i=idxTopic(TOPICS,id);
+    if(i>=0){TOPICS_TRASH.unshift(TOPICS[i]);TOPICS.splice(i,1);}
+    updateNavCounts();drawTopicTable();
+    toast('지웠습니다 · 휴지통에서 되살릴 수 있습니다','ok');
+  }).catch(topicErr);
+}
+function topicRestore(id){
+  // 되살릴 때는 카탈로그 순서로 돌려놓아야 해서 글감만 다시 받는다(조회수·글 목록은 그대로).
+  apiTopic('undel',id).then(reloadTopics).then(function(){
+    toast('되살렸습니다.','ok');
+  }).catch(topicErr);
+}
+
+function filteredTopics(){
+  return TOPICS.filter(function(t){
+    if(TF.status!=='all'&&t.status!==TF.status)return false;
+    if(TF.cat!=='all'&&t.category!==TF.cat)return false;
+    if(TF.author!=='all'&&t.author!==TF.author)return false;
+    if(TF.funnel!=='all'&&t.funnel!==TF.funnel)return false;
+    if(TF.q){var q=TF.q.toLowerCase();
+      if((t.title||'').toLowerCase().indexOf(q)<0&&(t.why||'').toLowerCase().indexOf(q)<0)return false;}
+    return true;
+  });
+}
+
+function renderPending(v){
+  var head='<div class="pagehead"><h1>대기중</h1><span class="meta" id="tcount"></span>'+
+    '<span class="sp"></span><button class="btn" onclick="manualReload()">↻ 새로고침</button></div>';
+
+  if(TOPICS_STATE==='unavailable'){
+    v.innerHTML=head+'<div class="panel"><div class="empty"><div class="big">🗂️</div>'+
+      '글감 목록을 불러오지 못했습니다.'+
+      '<div style="margin-top:10px;font-size:13px;line-height:1.7;color:var(--muted)">'+
+      '서버가 아직 글감 API(<code>/api/stats?topics=1</code>)를 모르는 상태일 수 있습니다.<br>'+
+      '배포 후 <code>web.xml</code> 의 <code>deployRev</code> 가 올라가 Resin 이 웹앱을 다시 배치해야 동작합니다.'+
+      '</div></div></div>';
+    return;
+  }
+  if(TOPICS_STATE==='nocatalog'){
+    v.innerHTML=head+'<div class="panel"><div class="empty"><div class="big">🗂️</div>'+
+      '서버에 글감 카탈로그가 없습니다.'+
+      '<div style="margin-top:10px;font-size:13px;line-height:1.7;color:var(--muted)">'+
+      '<code>_data/topics.json</code> 이 저장소에 커밋돼 빌드에 실리면 여기 나타납니다.'+
+      '</div></div></div>';
+    return;
+  }
+  if(!TOPICS.length&&!TOPICS_TRASH.length&&!TOPICS_ORPHAN.length){
+    v.innerHTML=head+'<div class="panel"><div class="empty"><div class="big">🗂️</div>'+
+      '아직 발굴된 글감이 없습니다.</div></div>';
+    return;
+  }
+
+  var authors=Array.from(new Set(TOPICS.map(function(t){return t.author}).filter(Boolean)));
+  var cats=Array.from(new Set(TOPICS.map(function(t){return t.category}).filter(Boolean)));
+  var sel=function(id,cur,opts){return '<select id="'+id+'" aria-label="'+id+'">'+opts.map(function(o){
+    return '<option value="'+esc(o[0])+'"'+(cur===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select>'};
+  var filterbar='<div class="filterbar">'+
+    sel('t-status',TF.status,[['all','상태 전체'],['대기','대기'],['집필중','집필중'],['발행','발행'],['반려','반려']])+
+    sel('t-cat',TF.cat,[['all','카테고리 전체']].concat(cats.map(function(c){return [c,CATL[c]||c]})))+
+    sel('t-author',TF.author,[['all','담당 전체']].concat(authors.map(function(a){return [a,a]})))+
+    sel('t-funnel',TF.funnel,[['all','퍼널 전체'],['TOFU','TOFU'],['MOFU','MOFU'],['BOFU','BOFU']])+
+    '<input type="search" id="t-q" placeholder="제목·이유 검색" value="'+esc(TF.q)+'" aria-label="검색">'+
+    '</div>';
+
+  v.innerHTML=head+filterbar+
+    '<div class="panel" style="padding:0"><div class="tablewrap" id="ttable"></div></div>'+
+    '<div id="ttrash"></div>'+
+    '<div class="panel"><h2>이 목록은 어디서 오나</h2>'+
+    '<div style="font-size:13px;line-height:1.9;color:var(--muted)">'+
+    '· 글감은 <code>_data/topics.json</code> 에 모이고 빌드가 서버로 올립니다'+
+    (TOPICS_GEN?' (카탈로그 기준 '+esc(TOPICS_GEN)+')':'')+'.<br>'+
+    '· <b>지운 기록은 서버에 남습니다</b> — 웹루트 밖이라 배포·프로그램 갱신이 돌아도 지워지지 않습니다.<br>'+
+    '· 순서는 카탈로그(우선순위) 순입니다. 실수로 지웠으면 아래 <b>휴지통</b>에서 되살리십시오.'+
+    '</div></div>';
+
+  ['t-status','t-cat','t-author','t-funnel'].forEach(function(id){
+    $(id).addEventListener('change',function(){
+      TF.status=$('t-status').value;TF.cat=$('t-cat').value;
+      TF.author=$('t-author').value;TF.funnel=$('t-funnel').value;drawTopicTable();});
+  });
+  $('t-q').addEventListener('input',function(){TF.q=this.value;drawTopicTable();});
+  drawTopicTable();
+}
+
+function drawTopicTable(){
+  if(!$('ttable'))return;            // 대기중 화면이 아닐 때 안전 종료
+  var list=filteredTopics();
+  if($('tcount'))$('tcount').textContent=list.length+'건 / 전체 '+TOPICS.length+'건'+
+    (TOPICS_TRASH.length||TOPICS_ORPHAN.length?' · 휴지통 '+(TOPICS_TRASH.length+TOPICS_ORPHAN.length)+'건':'');
+  var head='<table><thead><tr><th style="width:44px">우선</th><th>제목</th><th>카테고리</th>'+
+    '<th>담당</th><th>상태</th><th>액션</th></tr></thead><tbody>';
+  var body;
+  if(!list.length){
+    body='<tr><td colspan="6"><div class="empty"><div class="big">🔍</div>'+
+      (TOPICS.length?'조건에 맞는 글감이 없습니다.':'남은 글감이 없습니다.')+'</div></td></tr>';
+  }else{
+    body=list.map(function(t){
+      return '<tr>'+
+        '<td class="rank">'+esc(t.priority)+'</td>'+
+        '<td class="title-cell">'+esc(t.title||'(제목 없음)')+
+          (t.why?'<div class="sub">'+esc(t.why)+'</div>':'')+
+          (t.blocker?'<div class="sub" style="color:var(--amber)">막힌 것 · '+esc(t.blocker)+'</div>':'')+
+          (t.source?'<div class="sub" style="opacity:.75">출처 '+esc(t.source)+'</div>':'')+'</td>'+
+        '<td><span class="chip">'+esc(CATL[t.category]||t.category||'-')+'</span> '+
+          '<span class="funnel">'+esc(t.funnel)+'</span></td>'+
+        '<td>'+esc(t.author)+'</td>'+
+        '<td>'+topicBadge(t.status)+'</td>'+
+        '<td><div class="rowact"><button class="del" onclick="topicDelete(\''+jsq(t.id)+'\')">삭제</button></div></td>'+
+        '</tr>';
+    }).join('');
+  }
+  $('ttable').innerHTML=head+body+'</tbody></table>';
+  drawTopicTrash();
+}
+
+/* 휴지통 — 지운 글감과, 카탈로그에서 사라졌는데 기록만 남은 id.
+   후자는 되살려도 보여줄 행이 없으므로 'id 만' 보여주고 기록을 지우는 버튼을 둔다. */
+function drawTopicTrash(){
+  var m=$('ttrash'); if(!m)return;
+  var n=TOPICS_TRASH.length+TOPICS_ORPHAN.length;
+  if(!n){m.innerHTML='';return;}
+  var rows=TOPICS_TRASH.map(function(t){
+    return '<tr><td class="title-cell">'+esc(t.title||t.id)+
+      '<div class="sub">'+esc(CATL[t.category]||t.category||'')+(t.author?' · '+esc(t.author):'')+'</div></td>'+
+      '<td>'+topicBadge(t.status)+'</td>'+
+      '<td><div class="rowact"><button onclick="topicRestore(\''+jsq(t.id)+'\')">복구</button></div></td></tr>';
+  }).join('')+TOPICS_ORPHAN.map(function(id){
+    return '<tr><td class="title-cell">'+esc(id)+
+      '<div class="sub">카탈로그에 없는 기록 — 되살려도 목록에 나타날 글감이 없습니다</div></td>'+
+      '<td><span class="badge draft">기록만</span></td>'+
+      '<td><div class="rowact"><button onclick="topicRestore(\''+jsq(id)+'\')">기록 지우기</button></div></td></tr>';
+  }).join('');
+  m.innerHTML='<div class="panel"><h2>휴지통 <span class="chip">'+n+'</span><span class="sp"></span>'+
+    '<button class="btn" onclick="TSHOWTRASH=!TSHOWTRASH;drawTopicTrash()">'+(TSHOWTRASH?'접기':'펼치기')+'</button></h2>'+
+    (TSHOWTRASH?'<div class="tablewrap"><table><tbody>'+rows+'</tbody></table></div>'
+               :'<div style="font-size:13px;color:var(--muted)">지운 글감 '+n+'건이 서버에 기록돼 있습니다. 되살리려면 펼치십시오.</div>')+
+    '</div>';
 }
 
 /* =========================================================================
