@@ -488,10 +488,10 @@
    "funnel": "TOFU",
    "author": "b4",
    "priority": null,
-   "status": "대기",
+   "status": "발행",
    "source": "14_주제후보_b4.md",
    "why": "training-hours-working-time과 노무 2연작. 금액이 큰 의사결정이라 검색 절박도가 높다",
-   "blocker": "판례 사건번호·선고일 law.go.kr 원문 대조 선행 · 서약서 문안 제공 금지(체크리스트만)"
+   "blocker": null
   },
   {
    "id": "level-based-training-system",
