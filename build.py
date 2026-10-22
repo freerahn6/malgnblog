@@ -50,6 +50,7 @@ NAMECARDS=json.load(open(_D+'/namecards.json',encoding='utf-8'))
 FIGMAP=json.load(open(_D+'/figmap.json',encoding='utf-8'))
 BANL=open(_D+'/wecandeo_datauri.txt',encoding='utf-8').read().strip()
 BANR=open(_D+'/malgnsoft_datauri.txt',encoding='utf-8').read().strip()
+FOOTER='<footer class="site"><div class="wrap"><span>© MALGNSOFT INC. ALL RIGHTS RESERVED.</span></div></footer>'
 BAN_LEFT=f'<a class="side-banner" href="https://www.wecandeo.com" target="_blank" rel="noopener"><img src="{BANL}" alt="위캔디오 - 동영상 클라우드 플랫폼"></a>'
 BAN_RIGHT=f'<aside class="rail"><a href="https://www.malgnsoft.com" target="_blank" rel="noopener"><img src="{BANR}" alt="맑은소프트"></a></aside>'
 # 모바일 햄버거 메뉴. 본문 CSS(_preview)는 좁은 화면에서 nav.main을 그냥 숨겨버리므로
@@ -303,7 +304,7 @@ PAGE='''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="v
 {namecard}
 {recentlist}
 </main>{banr}</div>
-<footer class="site"><div class="wrap"><span class="plate"><img src="{logo}" alt="맑은소프트"></span><span>맑은소프트 블로그 · (주)맑은소프트</span><span style="margin-left:auto">© 맑은소프트</span></div></footer>
+{FOOTER}
 {fab}
 {script}
 {track}
@@ -338,7 +339,7 @@ for a in arts:
     _ogimg,(_ogw,_ogh)=og_of(a['slug'])
     page=PAGE.format(ogimg=_ogimg,ogw=_ogw,ogh=_ogh,
         title=H.escape(a['title']),desc=H.escape(a.get('description','')),cat=a['category'],slug=a['slug'],
-        catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,toc=toc_html,date=a.get('date',''),
+        catlabel=CATL.get(a['category'],a['category']),css=ACSS,logo=LOGO,FOOTER=FOOTER,toc=toc_html,date=a.get('date',''),
         rt=read_min(a['body']),herofig=herofig,body=body_html,fab=FAB,script=SCRIPT,extra=EXTRA_CSS,banl=BAN_LEFT,banr=BAN_RIGHT,
         aname=H.escape(aname),arole=arole,ainit=aemoji,namecard=namecard,recentlist=recentlist,jsonld=jsonld(a,_url),track=TRACK,nav=navhtml(a['category']))
     d=f"{OUT}/{a['category']}/{a['slug']}"; os.makedirs(d,exist_ok=True)
@@ -348,9 +349,8 @@ for a in arts:
 # ---- HOME ----
 head=idx_html[:idx_html.find('<article class="featured">')]
 tail=idx_html[idx_html.find('</main>'):]
-# 시안 템플릿 푸터의 안내 문구 제거(로고만 남김)
-tail=tail.replace('<span>교육운영 노트 by 맑은소프트 · (주)맑은소프트</span>','',1)
-tail=tail.replace('<span style="margin-left:auto">디자인 시안 · 실제 발행 시 Astro 정적 빌드</span>','',1)
+# 시안 템플릿 푸터(로고·안내 문구)를 공통 저작권 푸터로 교체
+tail=re.sub(r'<footer class="site">.*?</footer>',lambda m:FOOTER,tail,count=1,flags=re.S)
 # fix head: remove preview banner, home links
 head=re.sub(r'<div class="banner">.*?</div>\s*','',head,count=1,flags=re.S)
 head=head.replace('<a class="brand" href="#">','<a class="brand" href="/">',1)
