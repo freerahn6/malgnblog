@@ -348,6 +348,9 @@ for a in arts:
 # ---- HOME ----
 head=idx_html[:idx_html.find('<article class="featured">')]
 tail=idx_html[idx_html.find('</main>'):]
+# 시안 템플릿 푸터의 안내 문구 제거(로고만 남김)
+tail=tail.replace('<span>교육운영 노트 by 맑은소프트 · (주)맑은소프트</span>','',1)
+tail=tail.replace('<span style="margin-left:auto">디자인 시안 · 실제 발행 시 Astro 정적 빌드</span>','',1)
 # fix head: remove preview banner, home links
 head=re.sub(r'<div class="banner">.*?</div>\s*','',head,count=1,flags=re.S)
 head=head.replace('<a class="brand" href="#">','<a class="brand" href="/">',1)
